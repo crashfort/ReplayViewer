@@ -27,10 +27,10 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
         return false;
     }
 
+    int start_offset = 0;
+
     stream.bookmarks = CreateArray(sizeof(RVBookmark));
     ResizeArray(stream.bookmarks, header.num_bookmarks);
-
-    int start_offset = 0;
 
     for (int i = 0; i < header.num_bookmarks; i++)
     {
