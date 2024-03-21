@@ -24,58 +24,6 @@ public RvMenuId RV_GetMenuItemId(Menu menu, int idx)
     return view_as<RvMenuId>(id);
 }
 
-// Instead of managing a huge list with many pages of hard to read names,
-// let the file management be done in the file explorer and just add everything in there.
-public void RV_AddAllReplaysForMap(int client)
-{
-    char dir_path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, RV_CurrentMap);
-
-    if (!DirExists(dir_path))
-    {
-        PrintToChat(client, "No replays exist for map %s", RV_CurrentMap);
-        return;
-    }
-
-    DirectoryListing dir_lister = OpenDirectory(dir_path);
-
-    if (dir_lister == null)
-    {
-        PrintToChat(client, "Could not open directory for map %s", RV_CurrentMap);
-        return;
-    }
-
-    FileType file_type;
-    char file_name[PLATFORM_MAX_PATH];
-    int index = 0;
-
-    char full_path[PLATFORM_MAX_PATH];
-
-    while (ReadDirEntry(dir_lister, file_name, sizeof(file_name), file_type))
-    {
-        if (file_type != FileType_File)
-        {
-            continue;
-        }
-
-        FormatEx(full_path, sizeof(full_path), "%s/%s", dir_path, file_name);
-
-        RV_SpawnBotWithStream(full_path);
-
-        index++;
-    }
-
-    delete dir_lister;
-
-    if (index == 0)
-    {
-        PrintToChat(client, "No replays available for %s", RV_CurrentMap);
-        return;
-    }
-
-    RV_PlaybackActive = true;
-}
-
 public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int param2)
 {
     if (action == MenuAction_Select)
@@ -88,6 +36,7 @@ public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int
             case RV_MENU_ADD_ALL_REPLAYS_FOR_MAP:
             {
                 RV_AddAllReplaysForMap(client);
+                RV_OpenInterfaceMenu(client);
             }
         }
     }
@@ -128,6 +77,24 @@ public int RV_HandleInterfaceMenu(Menu menu, MenuAction action, int param1, int 
             {
                 RV_OpenAddReplaysMenu(client);
             }
+
+            case RV_MENU_START_PLAYBACK:
+            {
+                RV_StartPlayback();
+                RV_OpenInterfaceMenu(client);
+            }
+
+            case RV_MENU_STOP_PLAYBACK:
+            {
+                RV_StopPlayback();
+                RV_OpenInterfaceMenu(client);
+            }
+
+            case RV_MENU_RESET_PLAYBACK:
+            {
+                RV_ResetPlayback();
+                RV_OpenInterfaceMenu(client);
+            }
         }
     }
 
@@ -149,7 +116,24 @@ public void RV_OpenInterfaceMenu(int client)
     Menu menu = CreateMenu(RV_HandleInterfaceMenu);
     SetMenuTitle(menu, "Replay Viewer");
 
-    RV_MenuAddEnumItem(menu, RV_MENU_ADD_REPLAYS, "Add replays");
+    if (!RV_HaveBotsPlaying)
+    {
+        RV_MenuAddEnumItem(menu, RV_MENU_ADD_REPLAYS, "Add replays");
+    }
+
+    else
+    {
+        if (!RV_PlaybackActive)
+        {
+            RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
+        }
+
+        else
+        {
+            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_RESET_PLAYBACK, "Reset playback");
+        }
+    }
 
     DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }

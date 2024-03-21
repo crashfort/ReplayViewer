@@ -28,8 +28,7 @@ enum struct RVFrame
 // One fake player that will be controlled by the replay stream.
 enum struct RVBot
 {
-    bool used;
-    int id; // Identifier used for various functions.
+    int id; // Identifier used for client identification.
     int playback_tick; // What index in frames.
     int playback_length; // How many frames there are.
     int start_offset; // Adjustments for sync.
@@ -42,13 +41,17 @@ enum RvMenuId
     RV_MENU_TOGGLE_PLAY,
     RV_MENU_ADD_REPLAYS,
     RV_MENU_ADD_ALL_REPLAYS_FOR_MAP,
-    RV_MENU_CLEAR,
+    RV_MENU_START_PLAYBACK,
+    RV_MENU_STOP_PLAYBACK,
+    RV_MENU_RESET_PLAYBACK,
     RV_MENU_OFFSET_REPLAY,
 };
 
 // References to every bot.
 RVBot RV_Bots[MAXPLAYERS + 1];
+bool RV_BotsUsed[MAXPLAYERS + 1];
 
 char RV_CurrentMap[128];
 
-bool RV_PlaybackActive;
+bool RV_PlaybackActive; // True if playback is currently happening.
+bool RV_HaveBotsPlaying; // True if bots are spawned and in a team. Though they may not be playing back.

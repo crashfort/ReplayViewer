@@ -30,10 +30,12 @@ public void RV_PluginEnd()
 public void RV_MapStart()
 {
     GetCurrentMap(RV_CurrentMap, sizeof(RV_CurrentMap));
-    RV_PlaybackActive = false;
 
-    RV_StartCmds();
-    RV_StartBots();
+    RV_PlaybackActive = false;
+    RV_HaveBotsPlaying = false;
+
+    RV_StartMapCmds();
+    RV_StartMapBots();
 }
 
 public void RV_MapEnd()
@@ -44,8 +46,30 @@ public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float 
 {
     if (IsFakeClient(client))
     {
-        return RV_RunBotCmd(RV_Bots[client], buttons, wishvel, wishangles);
+        if (RV_BotsUsed[client])
+        {
+            return RV_RunBotCmd(RV_Bots[client], buttons, wishvel, wishangles);
+        }
     }
 
     return Plugin_Continue;
+}
+
+public void RV_StartPlayback()
+{
+    RV_PlaybackActive = true;
+    RV_StartPlaybackBots();
+}
+
+public void RV_StopPlayback()
+{
+    RV_PlaybackActive = false;
+    RV_HaveBotsPlaying = false;
+
+    RV_StopPlaybackBots();
+}
+
+public void RV_ResetPlayback()
+{
+    RV_PlaybackActive = false;
 }

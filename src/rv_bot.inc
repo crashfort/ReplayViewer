@@ -14,13 +14,14 @@ public Action RV_FindBots(Handle timer)
         if (IsClientInGame(i) && IsFakeClient(i) && !IsClientSourceTV(i))
         {
             RV_InitBot(RV_Bots[i], i);
+            RV_BotsUsed[i] = true;
         }
     }
 
     return Plugin_Stop;
 }
 
-public void RV_StartBots()
+public void RV_StartMapBots()
 {
     // Must wait a bit before we can find the bots.
     CreateTimer(1.0, RV_FindBots);
@@ -28,7 +29,6 @@ public void RV_StartBots()
 
 public void RV_InitBot(RVBot bot, int id)
 {
-    bot.used = true;
     bot.id = id;
     bot.frames = null;
 
@@ -60,11 +60,6 @@ public void RV_StopBot(RVBot bot)
     FormatEx(name_buf, sizeof(name_buf), "crashfort/ReplayViewer");
 
     SetClientName(bot.id, name_buf);
-}
-
-public bool RV_IsBotUsed(RVBot bot)
-{
-    return bot.used;
 }
 
 public bool RV_IsBotPlaying(RVBot bot)
@@ -101,23 +96,18 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     if (!RV_PlaybackActive)
     {
         // Bots should not update during pause.
-        return Plugin_Continue;
-    }
-
-    if (!RV_IsBotUsed(bot))
-    {
-        return Plugin_Continue;
+        return Plugin_Handled;
     }
 
     if (!RV_IsBotPlaying(bot))
     {
-        return Plugin_Continue;
+        return Plugin_Handled;
     }
 
     if (bot.frames == null)
     {
         // PrintToServer("No frames %d", bot.id);
-        return Plugin_Continue;
+        return Plugin_Handled;
     }
 
     // Parameter overrides to ensure a smooth playback
@@ -183,7 +173,7 @@ public int RV_GetFreeBotIdx()
     // Since we are a listen server, start from index 1 (since the player is 0).
     for (int i = 1; i <= MaxClients; i++)
     {
-        if (RV_IsBotUsed(RV_Bots[i]))
+        if (RV_BotsUsed[i])
         {
             if (!RV_IsBotPlaying(RV_Bots[i]))
             {
@@ -212,7 +202,6 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
-    // TODO Need to get the name of the player here.
     // TODO Need to get what team to start on from the stream.
     RV_SpawnBot(RV_Bots[free_idx], "Playing", CS_TEAM_T);
     RV_SetBotFrames(RV_Bots[free_idx], frames); // Transfer stream.
@@ -220,4 +209,35 @@ public bool RV_SpawnBotWithStream(char[] path)
     delete frames;
 
     return true;
+}
+
+public void RV_ResetBot(RVBot bot)
+{
+    bot.playback_tick = 0;
+}
+
+// Start playback.
+public void RV_StartPlaybackBots()
+{
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (RV_BotsUsed[i])
+        {
+            RV_ResetBot(RV_Bots[i]);
+        }
+    }
+}
+
+// Clear all the bots and stop playback.
+// New replays can be loaded after this.
+public void RV_StopPlaybackBots()
+{
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (RV_BotsUsed[i])
+        {
+            RV_ResetBot(RV_Bots[i]);
+            RV_StopBot(RV_Bots[i]);
+        }
+    }
 }

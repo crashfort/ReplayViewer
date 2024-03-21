@@ -59,7 +59,7 @@ public void RV_RegisterCmds()
 }
 
 // Set some prerequisites that we want.
-public void RV_StartCmds()
+public void RV_StartMapCmds()
 {
     ServerCommand("sv_cheats 1");
 

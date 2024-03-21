@@ -73,3 +73,55 @@ ArrayList RV_LoadFrameStream(char[] path)
 
     return ret;
 }
+
+// Instead of managing a huge list with many pages of hard to read names,
+// let the file management be done in the file explorer and just add everything in there.
+public void RV_AddAllReplaysForMap(int client)
+{
+    char dir_path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, RV_CurrentMap);
+
+    if (!DirExists(dir_path))
+    {
+        PrintToChat(client, "No replays exist for map %s", RV_CurrentMap);
+        return;
+    }
+
+    DirectoryListing dir_lister = OpenDirectory(dir_path);
+
+    if (dir_lister == null)
+    {
+        PrintToChat(client, "Could not open directory for map %s", RV_CurrentMap);
+        return;
+    }
+
+    FileType file_type;
+    char file_name[PLATFORM_MAX_PATH];
+    int index = 0;
+
+    char full_path[PLATFORM_MAX_PATH];
+
+    while (ReadDirEntry(dir_lister, file_name, sizeof(file_name), file_type))
+    {
+        if (file_type != FileType_File)
+        {
+            continue;
+        }
+
+        FormatEx(full_path, sizeof(full_path), "%s/%s", dir_path, file_name);
+
+        RV_SpawnBotWithStream(full_path);
+
+        index++;
+    }
+
+    delete dir_lister;
+
+    if (index == 0)
+    {
+        PrintToChat(client, "No replays available for %s", RV_CurrentMap);
+        return;
+    }
+
+    RV_HaveBotsPlaying = true;
+}
