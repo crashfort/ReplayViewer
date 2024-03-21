@@ -5,6 +5,8 @@
 
 // Structures and constants and variables.
 
+#define RV_ROOT_PATH "data/replay_viewer"
+
 // Static information about the replay stream.
 enum struct RVHeader
 {
@@ -19,7 +21,7 @@ enum struct RVFrame
 {
     int buttons;
     float position[3];
-    float angles[3]; // Roll not used.
+    float angles[2];
     float velocity[3];
 }
 
@@ -28,6 +30,7 @@ enum struct RVBot
 {
     int id; // Identifier used for various functions.
     int playback_tick; // What index in frames.
+    int playback_length; // How many frames there are.
     int start_offset; // Adjustments for sync.
     ArrayList frames; // Array of RVFrame.
 }
@@ -35,9 +38,16 @@ enum struct RVBot
 // Constants used to refer to menu items.
 enum RvMenuId
 {
-    MENU_Play, // Start playing now.
-    MENU_AddBot, // Add a new bot.
+    RV_MENU_TOGGLE_PLAY,
+    RV_MENU_ADD_REPLAYS,
+    RV_MENU_ADD_ALL_REPLAYS_FOR_MAP,
+    RV_MENU_CLEAR,
+    RV_MENU_OFFSET_REPLAY,
 };
 
 // References to every bot.
-RVBot RV_Bots[MAXPLAYERS];
+RVBot RV_Bots[MAXPLAYERS + 1];
+
+char RV_CurrentMap[128];
+
+bool RV_PlaybackActive;

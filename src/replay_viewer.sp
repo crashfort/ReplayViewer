@@ -10,11 +10,15 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#include "rv_engine.inc"
 #include "rv_priv.inc"
 #include "rv_cmds.inc"
 #include "rv_menu.inc"
 #include "rv_main.inc"
 #include "rv_bot.inc"
+#include "rv_load.inc"
+#include "rv_util.inc"
+#include "rv_player.inc"
 
 // Main interface from SourceMod.
 
@@ -49,10 +53,5 @@ public void OnMapEnd()
 
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float wishvel[3], float wishangles[3])
 {
-    if (IsFakeClient(client))
-    {
-        return RV_RunBotCommand(client, buttons, wishvel, wishangles);
-    }
-
-    return Plugin_Continue;
+    return RV_RunPlayerCmd(client, buttons, wishvel, wishangles);
 }

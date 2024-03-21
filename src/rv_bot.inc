@@ -10,7 +10,8 @@ public Action RV_FindBots(Handle timer)
     int index = 0;
 
     // Note that we read from the server max player count here, which can change.
-    for (int i = 1; i < MaxClients; i++)
+    // Since we are a listen server, start from index 1 (since the player is 0).
+    for (int i = 1; i <= MaxClients; i++)
     {
         if (IsClientInGame(i) && IsFakeClient(i) && !IsClientSourceTV(i))
         {
@@ -31,7 +32,28 @@ public void RV_StartBots()
 public void RV_InitBot(RVBot bot, int id)
 {
     bot.id = id;
-    
+    bot.frames = null;
+
+    RV_StopBot(bot);
+}
+
+public void RV_SpawnBot(RVBot bot, char[] name, int team)
+{
+    ChangeClientTeam(bot.id, team);
+    CS_RespawnPlayer(bot.id);
+
+    SetEntityRenderMode(bot.id, RENDER_TRANSADD);
+    SetEntityRenderColor(bot.id, 255, 255, 255, 100);
+
+    // Having a bot in noclip and zero gravity ensures it's smooth.
+    SetEntityMoveType(bot.id, MOVETYPE_NOCLIP);
+    SetEntityGravity(bot.id, 0.0);
+
+    SetClientName(bot.id, name);
+}
+
+public void RV_StopBot(RVBot bot)
+{
     ChangeClientTeam(bot.id, CS_TEAM_SPECTATOR);
 
     char name_buf[MAX_NAME_LENGTH];
@@ -40,25 +62,130 @@ public void RV_InitBot(RVBot bot, int id)
     SetClientName(bot.id, name_buf);
 }
 
-public void RV_SpawnBot(RVBot bot)
-{
-    CS_RespawnPlayer(bot.id);
-
-    SetEntityRenderMode(bot.id, RENDER_TRANSADD);
-    SetEntityRenderColor(bot.id, 255, 255, 255, 100);
-
-    // Having a bot in noclip and zero gravity ensures it's smooth
-    SetEntityMoveType(bot.id, MOVETYPE_NOCLIP);
-    SetEntityGravity(bot.id, 0.0);
-}
-
 public bool RV_IsBotPlaying(RVBot bot)
 {
     int team = GetClientTeam(bot.id);
     return team == CS_TEAM_T || team == CS_TEAM_CT;
 }
 
-public Action RV_RunBotCommand(int client, int& buttons, float wishvel[3], float wishangles[3])
+// Set new array of RVFrame.
+public void RV_SetBotFrames(RVBot bot, ArrayList frames)
 {
-    return Plugin_Continue;
+    if (bot.frames != null)
+    {
+        delete bot.frames;
+        bot.frames = null;
+    }
+
+    bot.frames = frames; // Transfer.
+    bot.playback_tick = 0;
+    bot.playback_length = GetArraySize(bot.frames);
+}
+
+public void RV_FreeBot(RVBot bot)
+{
+    if (bot.frames != null)
+    {
+        delete bot.frames;
+        bot.frames = null;
+    }
+}
+
+public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
+{
+    if (!RV_PlaybackActive)
+    {
+        // Bots should not update during pause.
+        return Plugin_Handled;
+    }
+
+    // Parameter overrides to ensure a smooth playback
+    wish_vel[0] = 0.0;
+    wish_vel[1] = 0.0;
+    wish_vel[2] = 0.0;
+
+    RVFrame frame;
+    GetArrayArray(bot.frames, bot.playback_tick, frame);
+
+    float view_angles[3];
+    view_angles[0] = frame.angles[0];
+    view_angles[1] = frame.angles[1];
+    view_angles[2] = 0.0;
+
+    wish_angles[0] = frame.angles[0];
+    wish_angles[1] = frame.angles[1];
+
+    // First tick just move to the start.
+
+    if (bot.playback_tick == 0)
+    {
+        TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
+    }
+
+    else
+    {
+        float cur_pos[3];
+        GetClientAbsOrigin(bot.id, cur_pos);
+
+        float distance = GetVectorDistance(frame.position, cur_pos, true);
+
+        if (distance > 9216.0)
+        {
+            TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
+        }
+
+        // Normal processing with just adjusting velocity between the recorded points.
+        else
+        {
+            float new_vel[3];
+            MakeVectorFromPoints(cur_pos, frame.position, new_vel);
+            ScaleVector(new_vel, 1.0 / GetTickInterval());
+
+            TeleportEntity(bot.id, NULL_VECTOR, view_angles, new_vel);
+        }
+    }
+
+    bot.playback_tick++;
+
+    return Plugin_Changed;
+}
+
+public bool RV_GetFreeBot(RVBot found)
+{
+    // Since we are a listen server, start from index 1 (since the player is 0).
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (!RV_IsBotPlaying(RV_Bots[i]))
+        {
+            found = RV_Bots[i];
+            return true;
+        }
+    }
+
+    return false;
+}
+
+public bool RV_SpawnBotWithStream(char[] path)
+{
+    RVBot new_bot;
+
+    if (!RV_GetFreeBot(new_bot))
+    {
+        PrintToChatAll("No more free bots");
+        return false;
+    }
+
+    ArrayList stream = RV_LoadFrameStream(path);
+
+    if (stream == null)
+    {
+        return false;
+    }
+
+    // TODO Need to get the name of the player here.
+    // TODO Need to get what team to start on from the stream.
+    RV_SpawnBot(new_bot, "Playing", CS_TEAM_T);
+    RV_SetBotFrames(new_bot, stream); // Transfer stream.
+
+    return true;
 }

@@ -5,16 +5,57 @@
 
 // Console commands.
 
-// Main user interaction with the system.
 public Action RV_OpenInterfaceCmd(int client, int args)
 {
     RV_OpenInterfaceMenu(client);
     return Plugin_Handled;
 }
 
+// Test to just load and print a stream.
+public Action RV_PrintStreamCmd(int client, int args)
+{
+    if (args == 0)
+    {
+        PrintToChatAll("Usage: sm_rv_print_stream <file>");
+        return Plugin_Handled;
+    }
+
+    char name[128];
+    GetCmdArg(1, name, sizeof(name)); // Args start at 1 apparently, but the check above is still right???
+
+    char path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, path, sizeof(path), "%s/replays/%s", RV_ROOT_PATH, name);
+
+    ArrayList stream = RV_LoadFrameStream(path);
+
+    if (stream == null)
+    {
+        return Plugin_Handled;
+    }
+
+    int num_ticks = GetArraySize(stream);
+
+    for (int i = 0; i < num_ticks; i++)
+    {
+        RVFrame frame;
+        GetArrayArray(stream, i, frame);
+
+        PrintToServer("%d", i);
+        PrintToServer("buttons=%d", frame.buttons);
+        PrintToServer("pos=%0.2f %0.2f %0.2f", frame.position[0], frame.position[1], frame.position[2]);
+        PrintToServer("angles=%0.2f %0.2f", frame.angles[0], frame.angles[1]);
+        PrintToServer("velo=%0.2f %0.2f %0.2f", frame.velocity[0], frame.velocity[1], frame.velocity[2]);
+    }
+
+    delete stream;
+
+    return Plugin_Handled;
+}
+
 public void RV_RegisterCmds()
 {
     RegConsoleCmd("sm_replay_viewer", RV_OpenInterfaceCmd);
+    RegConsoleCmd("sm_rv_print_stream", RV_PrintStreamCmd);
 }
 
 // Set some prerequisites that we want.
