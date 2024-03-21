@@ -28,6 +28,7 @@ enum struct RVFrame
 // One fake player that will be controlled by the replay stream.
 enum struct RVBot
 {
+    bool used;
     int id; // Identifier used for various functions.
     int playback_tick; // What index in frames.
     int playback_length; // How many frames there are.

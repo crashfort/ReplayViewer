@@ -23,3 +23,8 @@ public void RV_MaybeCreateDir(char[] path)
         CreateDirectory(path, 511); // All access.
     }
 }
+
+public ArrayList RV_CloneArrayHandle(ArrayList source)
+{
+    return view_as<ArrayList>(CloneHandle(view_as<Handle>(source)));
+}

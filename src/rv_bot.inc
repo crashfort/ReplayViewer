@@ -7,16 +7,13 @@
 
 public Action RV_FindBots(Handle timer)
 {
-    int index = 0;
-
     // Note that we read from the server max player count here, which can change.
     // Since we are a listen server, start from index 1 (since the player is 0).
     for (int i = 1; i <= MaxClients; i++)
     {
         if (IsClientInGame(i) && IsFakeClient(i) && !IsClientSourceTV(i))
         {
-            RV_InitBot(RV_Bots[index], i);
-            index++;
+            RV_InitBot(RV_Bots[i], i);
         }
     }
 
@@ -31,8 +28,11 @@ public void RV_StartBots()
 
 public void RV_InitBot(RVBot bot, int id)
 {
+    bot.used = true;
     bot.id = id;
     bot.frames = null;
+
+    // PrintToServer("init bot id %d %d", id, bot.id);
 
     RV_StopBot(bot);
 }
@@ -62,6 +62,11 @@ public void RV_StopBot(RVBot bot)
     SetClientName(bot.id, name_buf);
 }
 
+public bool RV_IsBotUsed(RVBot bot)
+{
+    return bot.used;
+}
+
 public bool RV_IsBotPlaying(RVBot bot)
 {
     int team = GetClientTeam(bot.id);
@@ -77,7 +82,7 @@ public void RV_SetBotFrames(RVBot bot, ArrayList frames)
         bot.frames = null;
     }
 
-    bot.frames = frames; // Transfer.
+    bot.frames = RV_CloneArrayHandle(frames); // Transfer.
     bot.playback_tick = 0;
     bot.playback_length = GetArraySize(bot.frames);
 }
@@ -96,13 +101,31 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     if (!RV_PlaybackActive)
     {
         // Bots should not update during pause.
-        return Plugin_Handled;
+        return Plugin_Continue;
+    }
+
+    if (!RV_IsBotUsed(bot))
+    {
+        return Plugin_Continue;
+    }
+
+    if (!RV_IsBotPlaying(bot))
+    {
+        return Plugin_Continue;
+    }
+
+    if (bot.frames == null)
+    {
+        // PrintToServer("No frames %d", bot.id);
+        return Plugin_Continue;
     }
 
     // Parameter overrides to ensure a smooth playback
     wish_vel[0] = 0.0;
     wish_vel[1] = 0.0;
     wish_vel[2] = 0.0;
+
+    // PrintToServer("Updating %d", bot.id);
 
     RVFrame frame;
     GetArrayArray(bot.frames, bot.playback_tick, frame);
@@ -147,45 +170,54 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
 
     bot.playback_tick++;
 
+    if (bot.playback_tick >= bot.playback_length)
+    {
+        bot.playback_tick = 0;
+    }
+
     return Plugin_Changed;
 }
 
-public bool RV_GetFreeBot(RVBot found)
+public int RV_GetFreeBotIdx()
 {
     // Since we are a listen server, start from index 1 (since the player is 0).
     for (int i = 1; i <= MaxClients; i++)
     {
-        if (!RV_IsBotPlaying(RV_Bots[i]))
+        if (RV_IsBotUsed(RV_Bots[i]))
         {
-            found = RV_Bots[i];
-            return true;
+            if (!RV_IsBotPlaying(RV_Bots[i]))
+            {
+                return i;
+            }
         }
     }
 
-    return false;
+    return -1;
 }
 
 public bool RV_SpawnBotWithStream(char[] path)
 {
-    RVBot new_bot;
+    int free_idx = RV_GetFreeBotIdx();
 
-    if (!RV_GetFreeBot(new_bot))
+    if (free_idx == -1)
     {
         PrintToChatAll("No more free bots");
         return false;
     }
 
-    ArrayList stream = RV_LoadFrameStream(path);
+    ArrayList frames = RV_LoadFrameStream(path);
 
-    if (stream == null)
+    if (frames == null)
     {
         return false;
     }
 
     // TODO Need to get the name of the player here.
     // TODO Need to get what team to start on from the stream.
-    RV_SpawnBot(new_bot, "Playing", CS_TEAM_T);
-    RV_SetBotFrames(new_bot, stream); // Transfer stream.
+    RV_SpawnBot(RV_Bots[free_idx], "Playing", CS_TEAM_T);
+    RV_SetBotFrames(RV_Bots[free_idx], frames); // Transfer stream.
+
+    delete frames;
 
     return true;
 }

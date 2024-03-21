@@ -72,6 +72,8 @@ public void RV_AddAllReplaysForMap(int client)
         PrintToChat(client, "No replays available for %s", RV_CurrentMap);
         return;
     }
+
+    RV_PlaybackActive = true;
 }
 
 public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int param2)
