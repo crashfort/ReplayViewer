@@ -26,19 +26,17 @@ public Action RV_PrintStreamCmd(int client, int args)
     char path[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, path, sizeof(path), "%s/replays/%s", RV_ROOT_PATH, name);
 
-    ArrayList stream = RV_LoadFrameStream(path);
+    RVStream stream;
 
-    if (stream == null)
+    if (!RV_LoadFrameStream(path, stream))
     {
         return Plugin_Handled;
     }
 
-    int num_ticks = GetArraySize(stream);
-
-    for (int i = 0; i < num_ticks; i++)
+    for (int i = 0; i < stream.num_frames; i++)
     {
         RVFrame frame;
-        GetArrayArray(stream, i, frame);
+        GetArrayArray(stream.frames, i, frame);
 
         PrintToServer("%d", i);
         PrintToServer("buttons=%d", frame.buttons);
@@ -47,7 +45,7 @@ public Action RV_PrintStreamCmd(int client, int args)
         PrintToServer("velo=%0.2f %0.2f %0.2f", frame.velocity[0], frame.velocity[1], frame.velocity[2]);
     }
 
-    delete stream;
+    RV_FreeStream(stream);
 
     return Plugin_Handled;
 }

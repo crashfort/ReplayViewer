@@ -46,9 +46,14 @@ public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float 
 {
     if (IsFakeClient(client))
     {
-        if (RV_BotsUsed[client])
+        if (GetClientTeam(client) != CS_TEAM_SPECTATOR)
         {
-            return RV_RunBotCmd(RV_Bots[client], buttons, wishvel, wishangles);
+            int idx = RV_GetBotIdxFromId(client);
+
+            if (idx != -1)
+            {
+                return RV_RunBotCmd(RV_Bots[idx], buttons, wishvel, wishangles);
+            }
         }
     }
 

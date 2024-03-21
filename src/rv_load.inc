@@ -6,6 +6,7 @@
 #define RV_MAGIC 0x02
 #define RV_BOOKMARK_SIZE 524 // Unknown external constant of unknown data.
 
+// Data that we read from the file.
 enum struct RvStreamInput
 {
     int buttons;
@@ -15,19 +16,17 @@ enum struct RvStreamInput
     float velocity[3];
 }
 
-ArrayList RV_LoadFrameStream(char[] path)
+bool RV_LoadFrameStream(char[] path, RVStream stream)
 {
     File file = OpenFile(path, "rb");
 
     if (file == null)
     {
         PrintToChatAll("Could not load stream \"%s\"", path);
-        return null;
+        return false;
     }
 
     PrintToChatAll("Loaded stream \"%s\"", path);
-
-    ArrayList ret = CreateArray(sizeof(RVFrame));
 
     int magic;
     ReadFileCell(file, magic, 4);
@@ -36,25 +35,29 @@ ArrayList RV_LoadFrameStream(char[] path)
     {
         PrintToChatAll("Could not load stream \"%s\", wrong version or wrong file type", path);
         delete file;
-        return null;
+        return false;
     }
 
     int dummy;
     ReadFileCell(file, dummy, 4); // Unknown data.
 
-    int num_ticks;
-    ReadFileCell(file, num_ticks, 4);
+    int num_frames;
+    ReadFileCell(file, num_frames, 4);
 
     int num_bookmarks;
     ReadFileCell(file, num_bookmarks, 4);
 
     int first_frame_pos = FilePosition(file) + num_bookmarks * RV_BOOKMARK_SIZE;
 
-    ResizeArray(ret, num_ticks);
+    int start_offset;
+    ReadFileCell(file, start_offset, 4);
+
+    stream.frames = CreateArray(sizeof(RVFrame));
+    ResizeArray(stream.frames, num_frames);
 
     FileSeek(file, first_frame_pos, SEEK_SET);
 
-    for (int i = 0; i < num_ticks; i++)
+    for (int i = 0; i < num_frames; i++)
     {
         RvStreamInput input;
         ReadFile(file, input, sizeof(input), 4);
@@ -66,12 +69,15 @@ ArrayList RV_LoadFrameStream(char[] path)
         RV_CopyVector2(input.angles, output.angles);
         RV_CopyVector3(input.velocity, output.velocity);
 
-        SetArrayArray(ret, i, output);
+        SetArrayArray(stream.frames, i, output);
     }
+
+    stream.num_frames = num_frames;
+    stream.start_offset = start_offset;
 
     delete file;
 
-    return ret;
+    return true;
 }
 
 // Instead of managing a huge list with many pages of hard to read names,
@@ -124,4 +130,20 @@ public void RV_AddAllReplaysForMap(int client)
     }
 
     RV_HaveBotsPlaying = true;
+}
+
+public void RV_FreeStream(RVStream stream)
+{
+    if (stream.frames != null)
+    {
+        delete stream.frames;
+        stream.frames = null;
+    }
+}
+
+public void RV_DupeStream(RVStream source, RVStream dest)
+{
+    dest.num_frames = source.num_frames;
+    dest.start_offset = source.start_offset;
+    dest.frames = RV_CloneArrayHandle(source.frames);
 }

@@ -13,8 +13,9 @@ public Action RV_FindBots(Handle timer)
     {
         if (IsClientInGame(i) && IsFakeClient(i) && !IsClientSourceTV(i))
         {
-            RV_InitBot(RV_Bots[i], i);
-            RV_BotsUsed[i] = true;
+            RV_InitBot(RV_Bots[RV_NumBots], i);
+            RV_BotMaps[i] = RV_NumBots;
+            RV_NumBots++;
         }
     }
 
@@ -23,14 +24,32 @@ public Action RV_FindBots(Handle timer)
 
 public void RV_StartMapBots()
 {
+    RV_NumBots = 0;
+
+    for (int i = 0; i < MAXPLAYERS + 1; i++)
+    {
+        RV_BotMaps[i] = 0;
+    }
+
     // Must wait a bit before we can find the bots.
     CreateTimer(1.0, RV_FindBots);
+}
+
+public int RV_GetBotIdxFromId(int id)
+{
+    int mapped = RV_BotMaps[id];
+
+    if (id == 0)
+    {
+        return -1;
+    }
+
+    return mapped;
 }
 
 public void RV_InitBot(RVBot bot, int id)
 {
     bot.id = id;
-    bot.frames = null;
 
     // PrintToServer("init bot id %d %d", id, bot.id);
 
@@ -68,27 +87,24 @@ public bool RV_IsBotPlaying(RVBot bot)
     return team == CS_TEAM_T || team == CS_TEAM_CT;
 }
 
-// Set new array of RVFrame.
-public void RV_SetBotFrames(RVBot bot, ArrayList frames)
+// Set new stream.
+public void RV_SetBotStream(RVBot bot, RVStream stream)
 {
-    if (bot.frames != null)
-    {
-        delete bot.frames;
-        bot.frames = null;
-    }
+    RV_FreeStream(bot.stream);
+    RV_DupeStream(stream, bot.stream); // Transfer.
 
-    bot.frames = RV_CloneArrayHandle(frames); // Transfer.
-    bot.playback_tick = 0;
-    bot.playback_length = GetArraySize(bot.frames);
+    RV_ResetBot(bot);
 }
 
 public void RV_FreeBot(RVBot bot)
 {
-    if (bot.frames != null)
-    {
-        delete bot.frames;
-        bot.frames = null;
-    }
+    RV_FreeStream(bot.stream);
+}
+
+public void RV_BotFinished(RVBot bot)
+{
+    RV_ResetBot(bot);
+    RV_StopBot(bot);
 }
 
 public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
@@ -104,9 +120,8 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
         return Plugin_Handled;
     }
 
-    if (bot.frames == null)
+    if (bot.stream.frames == null)
     {
-        // PrintToServer("No frames %d", bot.id);
         return Plugin_Handled;
     }
 
@@ -117,8 +132,16 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
 
     // PrintToServer("Updating %d", bot.id);
 
+    // Negative frames are used for synchronization.
+    int read_frame = bot.playback_frame;
+
+    if (read_frame < 0)
+    {
+        read_frame = 0;
+    }
+
     RVFrame frame;
-    GetArrayArray(bot.frames, bot.playback_tick, frame);
+    GetArrayArray(bot.stream.frames, read_frame, frame);
 
     float view_angles[3];
     view_angles[0] = frame.angles[0];
@@ -128,9 +151,9 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     wish_angles[0] = frame.angles[0];
     wish_angles[1] = frame.angles[1];
 
-    // First tick just move to the start.
+    // First frame just move to the start.
 
-    if (bot.playback_tick == 0)
+    if (bot.playback_frame <= 0)
     {
         TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
     }
@@ -142,6 +165,7 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
 
         float distance = GetVectorDistance(frame.position, cur_pos, true);
 
+        // Teleported somewhere else.
         if (distance > 9216.0)
         {
             TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
@@ -158,11 +182,11 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
         }
     }
 
-    bot.playback_tick++;
+    bot.playback_frame++;
 
-    if (bot.playback_tick >= bot.playback_length)
+    if (bot.playback_frame >= bot.stream.num_frames)
     {
-        bot.playback_tick = 0;
+        RV_BotFinished(bot);
     }
 
     return Plugin_Changed;
@@ -170,15 +194,11 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
 
 public int RV_GetFreeBotIdx()
 {
-    // Since we are a listen server, start from index 1 (since the player is 0).
-    for (int i = 1; i <= MaxClients; i++)
+    for (int i = 0; i < RV_NumBots; i++)
     {
-        if (RV_BotsUsed[i])
+        if (!RV_IsBotPlaying(RV_Bots[i]))
         {
-            if (!RV_IsBotPlaying(RV_Bots[i]))
-            {
-                return i;
-            }
+            return i;
         }
     }
 
@@ -187,43 +207,63 @@ public int RV_GetFreeBotIdx()
 
 public bool RV_SpawnBotWithStream(char[] path)
 {
-    int free_idx = RV_GetFreeBotIdx();
+    int idx = RV_GetFreeBotIdx();
 
-    if (free_idx == -1)
+    if (idx == -1)
     {
         PrintToChatAll("No more free bots");
         return false;
     }
 
-    ArrayList frames = RV_LoadFrameStream(path);
+    RVStream stream;
 
-    if (frames == null)
+    if (!RV_LoadFrameStream(path, stream))
     {
         return false;
     }
 
     // TODO Need to get what team to start on from the stream.
-    RV_SpawnBot(RV_Bots[free_idx], "Playing", CS_TEAM_T);
-    RV_SetBotFrames(RV_Bots[free_idx], frames); // Transfer stream.
+    RV_SpawnBot(RV_Bots[idx], "Playing", CS_TEAM_T);
+    RV_SetBotStream(RV_Bots[idx], stream); // Transfer stream.
 
-    delete frames;
+    RV_FreeStream(stream);
 
     return true;
 }
 
 public void RV_ResetBot(RVBot bot)
 {
-    bot.playback_tick = 0;
+    bot.playback_frame = 0;
 }
 
 // Start playback.
 public void RV_StartPlaybackBots()
 {
-    for (int i = 1; i <= MaxClients; i++)
+    for (int i = 0; i < RV_NumBots; i++)
     {
-        if (RV_BotsUsed[i])
+        RV_ResetBot(RV_Bots[i]);
+    }
+
+    // Offset everyone to the slowest starter.
+    int slowest_starter = 0;
+
+    for (int i = 0; i < RV_NumBots; i++)
+    {
+        if (RV_IsBotPlaying(RV_Bots[i]))
         {
-            RV_ResetBot(RV_Bots[i]);
+            if (RV_Bots[i].stream.start_offset > slowest_starter)
+            {
+                slowest_starter = RV_Bots[i].stream.start_offset;
+            }
+        }
+    }
+
+    for (int i = 0; i < RV_NumBots; i++)
+    {
+        if (RV_IsBotPlaying(RV_Bots[i]))
+        {
+            int offset = slowest_starter - RV_Bots[i].stream.start_offset;
+            RV_Bots[i].playback_frame = -offset;
         }
     }
 }
@@ -232,12 +272,9 @@ public void RV_StartPlaybackBots()
 // New replays can be loaded after this.
 public void RV_StopPlaybackBots()
 {
-    for (int i = 1; i <= MaxClients; i++)
+    for (int i = 0; i < RV_NumBots; i++)
     {
-        if (RV_BotsUsed[i])
-        {
-            RV_ResetBot(RV_Bots[i]);
-            RV_StopBot(RV_Bots[i]);
-        }
+        RV_ResetBot(RV_Bots[i]);
+        RV_StopBot(RV_Bots[i]);
     }
 }

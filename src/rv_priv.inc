@@ -7,15 +7,6 @@
 
 #define RV_ROOT_PATH "data/replay_viewer"
 
-// Static information about the replay stream.
-enum struct RVHeader
-{
-    int version; // Format version.
-    int length; // How many frames there are.
-    char name[MAX_NAME_LENGTH]; // Name of player.
-    int team; // What team the bot should start in.
-}
-
 // One frame of the replay stream.
 enum struct RVFrame
 {
@@ -25,14 +16,19 @@ enum struct RVFrame
     float velocity[3];
 }
 
+enum struct RVStream
+{
+    int start_offset;
+    int num_frames;
+    ArrayList frames; // Array of RVFrame.
+}
+
 // One fake player that will be controlled by the replay stream.
 enum struct RVBot
 {
     int id; // Identifier used for client identification.
-    int playback_tick; // What index in frames.
-    int playback_length; // How many frames there are.
-    int start_offset; // Adjustments for sync.
-    ArrayList frames; // Array of RVFrame.
+    int playback_frame; // What index in stream.frames.
+    RVStream stream; // Stream we are reading from.
 }
 
 // Constants used to refer to menu items.
@@ -44,12 +40,12 @@ enum RvMenuId
     RV_MENU_START_PLAYBACK,
     RV_MENU_STOP_PLAYBACK,
     RV_MENU_RESET_PLAYBACK,
-    RV_MENU_OFFSET_REPLAY,
 };
 
 // References to every bot.
 RVBot RV_Bots[MAXPLAYERS + 1];
-bool RV_BotsUsed[MAXPLAYERS + 1];
+int RV_NumBots;
+int RV_BotMaps[MAXPLAYERS + 1];
 
 char RV_CurrentMap[128];
 
