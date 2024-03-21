@@ -3,18 +3,7 @@
 #endif
 #define LOAD_INCLUDED
 
-#define RV_MAGIC 0x02
-#define RV_BOOKMARK_SIZE 524 // Unknown external constant of unknown data.
-
-// Data that we read from the file.
-enum struct RvStreamInput
-{
-    int buttons;
-    float position[3];
-    float angles[2];
-    int reserved;
-    float velocity[3];
-}
+#define RV_MAGIC 0x02 // Identifier or version.
 
 bool RV_LoadFrameStream(char[] path, RVStream stream)
 {
@@ -28,51 +17,45 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
 
     PrintToChatAll("Loaded stream \"%s\"", path);
 
-    int magic;
-    ReadFileCell(file, magic, 4);
+    RVHeader header;
+    ReadFile(file, header, sizeof(header), 4);
 
-    if (magic != RV_MAGIC)
+    if (header.magic != RV_MAGIC)
     {
-        PrintToChatAll("Could not load stream \"%s\", wrong version or wrong file type", path);
+        PrintToChatAll("Could not load stream \"%s\", wrong version or wrong file type (%d), expected %d", path, header.magic, RV_MAGIC);
         delete file;
         return false;
     }
 
-    int dummy;
-    ReadFileCell(file, dummy, 4); // Unknown data.
+    stream.bookmarks = CreateArray(sizeof(RVBookmark));
+    ResizeArray(stream.bookmarks, header.num_bookmarks);
 
-    int num_frames;
-    ReadFileCell(file, num_frames, 4);
+    int start_offset = 0;
 
-    int num_bookmarks;
-    ReadFileCell(file, num_bookmarks, 4);
-
-    int first_frame_pos = FilePosition(file) + num_bookmarks * RV_BOOKMARK_SIZE;
-
-    int start_offset;
-    ReadFileCell(file, start_offset, 4);
-
-    stream.frames = CreateArray(sizeof(RVFrame));
-    ResizeArray(stream.frames, num_frames);
-
-    FileSeek(file, first_frame_pos, SEEK_SET);
-
-    for (int i = 0; i < num_frames; i++)
+    for (int i = 0; i < header.num_bookmarks; i++)
     {
-        RvStreamInput input;
-        ReadFile(file, input, sizeof(input), 4);
+        RVBookmark bk;
+        ReadFile(file, bk, sizeof(bk), 4);
 
-        RVFrame output;
-        output.buttons = input.buttons;
+        if (i == 0)
+        {
+            start_offset = bk.frame;
+        }
 
-        RV_CopyVector3(input.position, output.position);
-        RV_CopyVector2(input.angles, output.angles);
-        RV_CopyVector3(input.velocity, output.velocity);
-
-        SetArrayArray(stream.frames, i, output);
+        SetArrayArray(stream.bookmarks, i, bk);
     }
 
-    stream.num_frames = num_frames;
+    stream.frames = CreateArray(sizeof(RVFrame));
+    ResizeArray(stream.frames, header.num_frames);
+
+    for (int i = 0; i < header.num_frames; i++)
+    {
+        RVFrame frame;
+        ReadFile(file, frame, sizeof(frame), 4);
+        SetArrayArray(stream.frames, i, frame);
+    }
+
+    stream.num_frames = header.num_frames;
     stream.start_offset = start_offset;
 
     delete file;
@@ -139,11 +122,19 @@ public void RV_FreeStream(RVStream stream)
         delete stream.frames;
         stream.frames = null;
     }
+
+    if (stream.bookmarks != null)
+    {
+        delete stream.bookmarks;
+        stream.bookmarks = null;
+    }
 }
 
 public void RV_DupeStream(RVStream source, RVStream dest)
 {
-    dest.num_frames = source.num_frames;
     dest.start_offset = source.start_offset;
+    dest.num_frames = source.num_frames;
+    dest.num_bookmarks = source.num_bookmarks;
     dest.frames = RV_CloneArrayHandle(source.frames);
+    dest.bookmarks = RV_CloneArrayHandle(source.bookmarks);
 }

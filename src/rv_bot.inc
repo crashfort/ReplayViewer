@@ -125,11 +125,6 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
         return Plugin_Handled;
     }
 
-    // Parameter overrides to ensure a smooth playback
-    wish_vel[0] = 0.0;
-    wish_vel[1] = 0.0;
-    wish_vel[2] = 0.0;
-
     // PrintToServer("Updating %d", bot.id);
 
     // Negative frames are used for synchronization.
@@ -143,6 +138,12 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     RVFrame frame;
     GetArrayArray(bot.stream.frames, read_frame, frame);
 
+    // Parameter overrides to ensure a smooth playback
+
+    wish_vel[0] = 0.0;
+    wish_vel[1] = 0.0;
+    wish_vel[2] = 0.0;
+
     float view_angles[3];
     view_angles[0] = frame.angles[0];
     view_angles[1] = frame.angles[1];
@@ -150,6 +151,8 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
 
     wish_angles[0] = frame.angles[0];
     wish_angles[1] = frame.angles[1];
+
+    buttons = frame.buttons;
 
     // First frame just move to the start.
 

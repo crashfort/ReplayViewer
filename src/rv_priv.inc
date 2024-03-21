@@ -7,19 +7,42 @@
 
 #define RV_ROOT_PATH "data/replay_viewer"
 
+// Data that we read from the file.
+enum struct RVHeader
+{
+    int magic; // Identifier or version.
+    int reserved;
+    int num_frames; // How many frames there are.
+    int num_bookmarks; // How many events there are.
+}
+
 // One frame of the replay stream.
+// Data that we read from the file.
 enum struct RVFrame
 {
-    int buttons;
+    int buttons; // See IN_ constants.
     float position[3];
     float angles[2];
+    int reserved;
     float velocity[3];
+}
+
+// Data that we read from the file.
+enum struct RVBookmark
+{
+    int frame; // Frame onwards where this event is active.
+    int reserved;
+    int stage; // Stage or checkpoint.
+    char target_name[256]; // Used by maps for trigger filter logic.
+    char class_name[256]; // Used by maps for trigger filter logic.
 }
 
 enum struct RVStream
 {
-    int start_offset;
-    int num_frames;
+    int start_offset; // Offset until timing starts.
+    int num_frames; // How many frames there are in total.
+    int num_bookmarks; // How many bookmarks there are in total.
+    ArrayList bookmarks; // Event information about stages etc.
     ArrayList frames; // Array of RVFrame.
 }
 
