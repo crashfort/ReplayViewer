@@ -158,8 +158,6 @@ public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], floa
 
     // First frame just move to the start.
 
-    PrintToServer("%d", frame.reserved);
-
     if (bot.playback_frame <= 0)
     {
         TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
@@ -255,8 +253,7 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
-    // TODO Need to get what team to start on from the stream.
-    RV_SpawnBot(RV_Bots[idx], "Playing", CS_TEAM_T);
+    RV_SpawnBot(RV_Bots[idx], "Playing", stream.team);
     RV_SetBotStream(RV_Bots[idx], stream); // Transfer stream.
 
     RV_FreeStream(stream);

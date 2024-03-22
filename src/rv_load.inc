@@ -58,6 +58,7 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
     stream.num_frames = header.num_frames;
     stream.num_bookmarks = header.num_bookmarks;
     stream.start_offset = start_offset;
+    stream.team = header.team;
 
     delete file;
 

@@ -19,7 +19,7 @@ enum RVSystemState
 enum struct RVHeader
 {
     int magic; // Identifier or version.
-    int reserved;
+    int team; // Team the player was in.
     int num_frames; // How many frames there are.
     int num_bookmarks; // How many events there are.
 }
@@ -50,6 +50,7 @@ enum struct RVStream
     int start_offset; // Offset until timing starts.
     int num_frames; // How many frames there are in total.
     int num_bookmarks; // How many bookmarks there are in total.
+    int team; // Team the player was in.
     ArrayList bookmarks; // Event information about stages etc.
     ArrayList frames; // Array of RVFrame.
 }
