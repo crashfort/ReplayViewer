@@ -7,7 +7,7 @@
 
 // Add a new item to a menu with a given identifier.
 // The identifier is later used to refer to this menu item.
-public void RV_MenuAddEnumItem(Handle menu, RvMenuId id, char[] title)
+public void RV_MenuAddEnumItem(Handle menu, RVMenuId id, char[] title)
 {
     char buf[64];
     IntToString(view_as<int>(id), buf, sizeof(buf));
@@ -15,13 +15,13 @@ public void RV_MenuAddEnumItem(Handle menu, RvMenuId id, char[] title)
 }
 
 // Get back the identifier for a menu item.
-public RvMenuId RV_GetMenuItemId(Menu menu, int idx)
+public RVMenuId RV_GetMenuItemId(Menu menu, int idx)
 {
     char info[8];
     GetMenuItem(menu, idx, info, sizeof(info));
 
     int id = StringToInt(info);
-    return view_as<RvMenuId>(id);
+    return view_as<RVMenuId>(id);
 }
 
 public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int param2)
@@ -29,7 +29,7 @@ public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int
     if (action == MenuAction_Select)
     {
         int client = param1;
-        RvMenuId item = RV_GetMenuItemId(menu, param2);
+        RVMenuId item = RV_GetMenuItemId(menu, param2);
 
         switch (item)
         {
@@ -69,7 +69,7 @@ public int RV_HandleInterfaceMenu(Menu menu, MenuAction action, int param1, int 
     if (action == MenuAction_Select)
     {
         int client = param1;
-        RvMenuId item = RV_GetMenuItemId(menu, param2);
+        RVMenuId item = RV_GetMenuItemId(menu, param2);
 
         switch (item)
         {

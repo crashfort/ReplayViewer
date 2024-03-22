@@ -55,7 +55,7 @@ enum struct RVBot
 }
 
 // Constants used to refer to menu items.
-enum RvMenuId
+enum RVMenuId
 {
     RV_MENU_TOGGLE_PLAY,
     RV_MENU_ADD_REPLAYS,
