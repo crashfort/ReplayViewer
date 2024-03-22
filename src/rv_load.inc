@@ -71,6 +71,23 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
         }
     }
 
+    // Find the end offset so we can set the real duration.
+
+    for (int i = stream.num_bookmarks - 1; i >= 0; i--)
+    {
+        RVBookmark bk;
+        GetArrayArray(stream.bookmarks, i, bk);
+
+        // Last event of this type will be the true end.
+        if (bk.type == RV_BK_STOP)
+        {
+            stream.end_offset = stream.num_frames - bk.frame;
+            break;
+        }
+    }
+
+    stream.duration = stream.num_frames - stream.start_offset - stream.end_offset;
+
     delete file;
 
     return true;

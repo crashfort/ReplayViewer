@@ -251,7 +251,24 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
-    RV_SpawnBot(RV_Bots[idx], "Playing", stream.team);
+    char bot_name[128];
+    char time_buf[64];
+
+    RV_FormatTime(time_buf, sizeof(time_buf), RV_FramesToTime(stream.duration, GetTickInterval()));
+
+    RVFileMeta meta;
+
+    if (RV_ParseFileMeta(path, meta))
+    {
+        Format(bot_name, sizeof(bot_name), "[%s] %d", time_buf, meta.player_id);
+    }
+
+    else
+    {
+        Format(bot_name, sizeof(bot_name), "[%s]", time_buf);
+    }
+
+    RV_SpawnBot(RV_Bots[idx], bot_name, stream.team);
     RV_SetBotStream(RV_Bots[idx], stream); // Transfer stream.
 
     RV_FreeStream(stream);

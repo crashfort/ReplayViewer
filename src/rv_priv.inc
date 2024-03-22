@@ -67,7 +67,9 @@ enum struct RVBookmark
 
 enum struct RVStream
 {
-    int start_offset; // Offset until timing starts.
+    int start_offset; // Offset until timing starts, in frames.
+    int end_offset; // Offset from the end where timing ends, in frames.
+    int duration; // Real timed length, minus start and end offset, in frames. Use RV_FramesToTime to get milliseconds.
     int num_frames; // How many frames there are in total.
     int num_bookmarks; // How many bookmarks there are in total.
     int team; // Team the player was in.
