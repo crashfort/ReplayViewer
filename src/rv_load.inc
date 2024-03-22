@@ -7,6 +7,9 @@
 
 bool RV_LoadFrameStream(char[] path, RVStream stream)
 {
+    RVFileMeta meta;
+    RV_ParseFileMeta(path, meta);
+
     File file = OpenFile(path, "rb");
 
     if (file == null)
@@ -147,4 +150,38 @@ public void RV_DupeStream(RVStream source, RVStream dest)
     dest.num_bookmarks = source.num_bookmarks;
     dest.frames = RV_CloneArrayHandle(source.frames);
     dest.bookmarks = RV_CloneArrayHandle(source.bookmarks);
+}
+
+// Extract additional information from the file name if we can.
+public bool RV_ParseFileMeta(char[] name, RVFileMeta meta)
+{
+    int idx = StrContains(name, RV_FILE_PREFIX);
+
+    if (idx == -1)
+    {
+        return false;
+    }
+
+    idx += strlen(RV_FILE_PREFIX);
+
+    char tokens[4][32];
+    int num_read = ExplodeString(name[idx], "_", tokens, sizeof(tokens), sizeof(tokens[]));
+
+    if (num_read != 4)
+    {
+        return false;
+    }
+
+    meta.map_id = StringToInt(tokens[0]);
+    meta.mode = StringToInt(tokens[1]);
+    meta.player_id = StringToInt(tokens[2]);
+    StringToInt64(tokens[3], meta.timestamp);
+
+    // PrintToServer("map_id=%d", meta.map_id);
+    // PrintToServer("mode=%d", meta.mode);
+    // PrintToServer("player_id=%d", meta.player_id);
+    // PrintToServer("time_low=%d", meta.timestamp[0]);
+    // PrintToServer("time_high=%d", meta.timestamp[1]);
+
+    return true;
 }
