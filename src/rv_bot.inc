@@ -57,7 +57,7 @@ public void RV_InitBot(RVBot bot, int id)
 }
 
 // Bots should not pick up items.
-public Action RV_BlockPickup(client, weapon)
+public Action RV_BlockWeaponCanUse(int client, int weapon)
 {
     return Plugin_Handled;
 }
@@ -65,7 +65,7 @@ public Action RV_BlockPickup(client, weapon)
 public void RV_SpawnBot(RVBot bot, char[] name, int team)
 {
     SetEntityFlags(bot.id, GetEntityFlags(bot.id) | FL_DONTTOUCH); // Do not touch triggers.
-    SDKHook(bot.id, SDKHook_WeaponCanUse, RV_BlockPickup); // Do not pick up items.
+    SDKHook(bot.id, SDKHook_WeaponCanUse, RV_BlockWeaponCanUse); // Do not pick up items.
 
     ChangeClientTeam(bot.id, team);
     CS_RespawnPlayer(bot.id);
