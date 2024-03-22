@@ -7,6 +7,14 @@
 
 #define RV_ROOT_PATH "data/replay_viewer"
 
+enum RVSystemState
+{
+    RV_SYS_IDLE,
+    RV_SYS_REPLAYS_LOADED,
+    RV_SYS_PLAYING,
+    RV_SYS_PAUSED,
+}
+
 // Data that we read from the file.
 enum struct RVHeader
 {
@@ -65,6 +73,9 @@ enum RVMenuId
     RV_MENU_RESET_PLAYBACK,
 };
 
+// -----------------------------------
+// System state:
+
 // References to every bot.
 RVBot RV_Bots[MAXPLAYERS + 1];
 int RV_NumBots;
@@ -72,5 +83,4 @@ int RV_BotMaps[MAXPLAYERS + 1];
 
 char RV_CurrentMap[128];
 
-bool RV_PlaybackActive; // True if playback is currently happening.
-bool RV_HaveBotsPlaying; // True if bots are spawned and in a team. Though they may not be playing back.
+RVSystemState RV_SystemState;

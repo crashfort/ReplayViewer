@@ -31,8 +31,7 @@ public void RV_MapStart()
 {
     GetCurrentMap(RV_CurrentMap, sizeof(RV_CurrentMap));
 
-    RV_PlaybackActive = false;
-    RV_HaveBotsPlaying = false;
+    RV_SystemState = RV_SYS_IDLE;
 
     RV_StartMapCmds();
     RV_StartMapBots();
@@ -44,15 +43,19 @@ public void RV_MapEnd()
 
 public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float wishangles[3])
 {
-    if (IsFakeClient(client))
+    // Bots should not update during pause.
+    if (RV_SystemState == RV_SYS_PLAYING)
     {
-        if (GetClientTeam(client) != CS_TEAM_SPECTATOR)
+        if (IsFakeClient(client))
         {
-            int idx = RV_GetBotIdxFromId(client);
-
-            if (idx != -1)
+            if (GetClientTeam(client) != CS_TEAM_SPECTATOR)
             {
-                return RV_RunBotCmd(RV_Bots[idx], buttons, wishvel, wishangles);
+                int idx = RV_GetBotIdxFromId(client);
+
+                if (idx != -1)
+                {
+                    return RV_RunBotCmd(RV_Bots[idx], buttons, wishvel, wishangles);
+                }
             }
         }
     }
@@ -62,19 +65,17 @@ public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float 
 
 public void RV_StartPlayback()
 {
-    RV_PlaybackActive = true;
+    RV_SystemState = RV_SYS_PLAYING;
     RV_StartPlaybackBots();
 }
 
 public void RV_StopPlayback()
 {
-    RV_PlaybackActive = false;
-    RV_HaveBotsPlaying = false;
-
+    RV_SystemState = RV_SYS_IDLE;
     RV_StopPlaybackBots();
 }
 
 public void RV_ResetPlayback()
 {
-    RV_PlaybackActive = false;
+    RV_SystemState = RV_SYS_PAUSED;
 }

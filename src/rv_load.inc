@@ -113,7 +113,7 @@ public void RV_AddAllReplaysForMap(int client)
         return;
     }
 
-    RV_HaveBotsPlaying = true;
+    RV_SystemState = RV_SYS_REPLAYS_LOADED;
 }
 
 public void RV_FreeStream(RVStream stream)

@@ -118,12 +118,6 @@ public void RV_BotFinished(RVBot bot)
 
 public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
 {
-    if (!RV_PlaybackActive)
-    {
-        // Bots should not update during pause.
-        return Plugin_Handled;
-    }
-
     if (!RV_IsBotPlaying(bot))
     {
         return Plugin_Handled;

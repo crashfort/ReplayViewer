@@ -116,22 +116,28 @@ public void RV_OpenInterfaceMenu(int client)
     Menu menu = CreateMenu(RV_HandleInterfaceMenu);
     SetMenuTitle(menu, "Replay Viewer");
 
-    if (!RV_HaveBotsPlaying)
+    switch (RV_SystemState)
     {
-        RV_MenuAddEnumItem(menu, RV_MENU_ADD_REPLAYS, "Add replays");
-    }
+        case RV_SYS_IDLE:
+        {
+            RV_MenuAddEnumItem(menu, RV_MENU_ADD_REPLAYS, "Add replays");
+        }
 
-    else
-    {
-        if (!RV_PlaybackActive)
+        case RV_SYS_REPLAYS_LOADED:
         {
             RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
         }
 
-        else
+        case RV_SYS_PLAYING:
         {
-            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
             RV_MenuAddEnumItem(menu, RV_MENU_RESET_PLAYBACK, "Reset playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
+        }
+
+        case RV_SYS_PAUSED:
+        {
+            RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
         }
     }
 
