@@ -18,6 +18,7 @@ public void RV_PluginStart()
 {
     RV_InitEngine();
     RV_InitPlayer();
+    RV_InitRound();
 
     RV_CreateDirs();
     RV_RegisterCmds();
