@@ -38,11 +38,21 @@ public Action RV_PrintStreamCmd(int client, int args)
         RVFrame frame;
         GetArrayArray(stream.frames, i, frame);
 
-        PrintToServer("%d", i);
+        PrintToServer("--------------- frame %d", i);
         PrintToServer("buttons=%d", frame.buttons);
         PrintToServer("pos=%0.2f %0.2f %0.2f", frame.position[0], frame.position[1], frame.position[2]);
         PrintToServer("angles=%0.2f %0.2f", frame.angles[0], frame.angles[1]);
         PrintToServer("velo=%0.2f %0.2f %0.2f", frame.velocity[0], frame.velocity[1], frame.velocity[2]);
+    }
+
+    for (int i = 0; i < stream.num_bookmarks; i++)
+    {
+        RVBookmark bk;
+        GetArrayArray(stream.bookmarks, i, bk);
+
+        PrintToServer("--------------- event %d", i);
+        PrintToServer("frame=%d", bk.frame);
+        PrintToServer("stage=%d", bk.stage);
     }
 
     RV_FreeStream(stream);
