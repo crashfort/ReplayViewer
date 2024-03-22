@@ -27,8 +27,6 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
         return false;
     }
 
-    int start_offset = 0;
-
     stream.bookmarks = CreateArray(sizeof(RVBookmark));
     ResizeArray(stream.bookmarks, header.num_bookmarks);
 
@@ -36,11 +34,6 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
     {
         RVBookmark bk;
         ReadFile(file, bk, sizeof(bk), 4);
-
-        if (i == 0)
-        {
-            start_offset = bk.frame;
-        }
 
         SetArrayArray(stream.bookmarks, i, bk);
     }
@@ -57,8 +50,23 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
 
     stream.num_frames = header.num_frames;
     stream.num_bookmarks = header.num_bookmarks;
-    stream.start_offset = start_offset;
+    stream.start_offset = 0;
     stream.team = header.team;
+
+    // Find the start offset so we can synchronize the start of all replays.
+
+    for (int i = 0; i < stream.num_bookmarks; i++)
+    {
+        RVBookmark bk;
+        GetArrayArray(stream.bookmarks, i, bk);
+
+        // First event of this type will be the true start.
+        if (bk.type == RV_BK_START)
+        {
+            stream.start_offset = bk.frame;
+            break;
+        }
+    }
 
     delete file;
 

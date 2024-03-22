@@ -35,11 +35,19 @@ enum struct RVFrame
     float velocity[3];
 }
 
+enum RVBookmarkType
+{
+    RV_BK_NONE,
+    RV_BK_CONTINUE,
+    RV_BK_STOP,
+    RV_BK_START,
+}
+
 // Data that we read from the file.
 enum struct RVBookmark
 {
     int frame; // Frame onwards where this event is active.
-    int reserved;
+    RVBookmarkType type; // Event type.
     int stage; // Stage or checkpoint.
     char target_name[256]; // Used by maps for trigger filter logic.
     char class_name[256]; // Used by maps for trigger filter logic.
