@@ -126,6 +126,7 @@ public void RV_OpenInterfaceMenu(int client)
         case RV_SYS_REPLAYS_LOADED:
         {
             RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
         }
 
         case RV_SYS_PLAYING:
