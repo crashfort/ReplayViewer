@@ -43,19 +43,15 @@ public void RV_MapEnd()
 
 public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float wishangles[3])
 {
-    // Bots should not update during pause.
-    if (RV_SystemState == RV_SYS_PLAYING)
+    if (IsFakeClient(client))
     {
-        if (IsFakeClient(client))
+        if (GetClientTeam(client) != CS_TEAM_SPECTATOR)
         {
-            if (GetClientTeam(client) != CS_TEAM_SPECTATOR)
-            {
-                int idx = RV_GetBotIdxFromId(client);
+            int idx = RV_GetBotIdxFromId(client);
 
-                if (idx != -1)
-                {
-                    return RV_RunBotCmd(RV_Bots[idx], buttons, wishvel, wishangles);
-                }
+            if (idx != -1)
+            {
+                return RV_RunBotCmd(RV_Bots[idx], buttons, wishvel, wishangles);
             }
         }
     }
@@ -78,4 +74,5 @@ public void RV_StopPlayback()
 public void RV_ResetPlayback()
 {
     RV_SystemState = RV_SYS_PAUSED;
+    RV_ResetPlaybackBots();
 }

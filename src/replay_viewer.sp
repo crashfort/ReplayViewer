@@ -11,13 +11,13 @@
 #pragma newdecls required
 
 #include "rv_engine.inc"
+#include "rv_util.inc"
 #include "rv_priv.inc"
 #include "rv_cmds.inc"
 #include "rv_menu.inc"
 #include "rv_main.inc"
 #include "rv_bot.inc"
 #include "rv_load.inc"
-#include "rv_util.inc"
 #include "rv_player.inc"
 
 // Main interface from SourceMod.

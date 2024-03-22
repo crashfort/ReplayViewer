@@ -117,12 +117,21 @@ public void RV_BotFinished(RVBot bot)
     RV_StopBot(bot);
 }
 
-public void RV_UpdateBotIdle(RVBot bot)
+public void RV_UpdateBotWaiting(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
 {
+    buttons = 0;
+    wish_vel = RV_ZERO_VECTOR3;
 }
 
-public void RV_UpdateBotWaiting(RVBot bot)
+public void RV_MoveBotToStart(RVBot bot)
 {
+    RVFrame frame;
+    GetArrayArray(bot.stream.frames, 0, frame);
+
+    float view_angles[3];
+    RV_CopyToAngles(frame.angles, view_angles);
+
+    TeleportEntity(bot.id, frame.position, view_angles, RV_ZERO_VECTOR3);
 }
 
 public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
@@ -147,20 +156,17 @@ public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], floa
     wish_vel[2] = 0.0;
 
     float view_angles[3];
-    view_angles[0] = frame.angles[0];
-    view_angles[1] = frame.angles[1];
-    view_angles[2] = 0.0;
+    RV_CopyToAngles(frame.angles, view_angles);
 
-    wish_angles[0] = frame.angles[0];
-    wish_angles[1] = frame.angles[1];
+    RV_CopyToAngles(frame.angles, wish_angles);
 
     buttons = frame.buttons;
 
     // First frame just move to the start.
 
-    if (bot.playback_frame <= 0)
+    if (read_frame == 0)
     {
-        TeleportEntity(bot.id, frame.position, view_angles, NULL_VECTOR);
+        TeleportEntity(bot.id, frame.position, view_angles, RV_ZERO_VECTOR3);
     }
 
     else
@@ -197,21 +203,13 @@ public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], floa
 
 public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
 {
-    if (!RV_IsBotPlaying(bot))
-    {
-        return Plugin_Handled;
-    }
+    // PrintToServer("%d", bot.state);
 
     switch (bot.state)
     {
-        case RV_BOT_IDLE:
-        {
-            RV_UpdateBotIdle(bot);
-        }
-
         case RV_BOT_WAITING:
         {
-            RV_UpdateBotWaiting(bot);
+            RV_UpdateBotWaiting(bot, buttons, wish_vel, wish_angles);
         }
 
         case RV_BOT_PLAYING:
@@ -271,7 +269,11 @@ public void RV_StartPlaybackBots()
 {
     for (int i = 0; i < RV_NumBots; i++)
     {
-        RV_StartBot(RV_Bots[i]);
+        if (RV_IsBotPlaying(RV_Bots[i]))
+        {
+            RV_StartBot(RV_Bots[i]);
+            RV_MoveBotToStart(RV_Bots[i]);
+        }
     }
 
     // Offset everyone to the slowest starter.
@@ -305,5 +307,22 @@ public void RV_StopPlaybackBots()
     for (int i = 0; i < RV_NumBots; i++)
     {
         RV_StopBot(RV_Bots[i]);
+    }
+}
+
+public void RV_PauseBot(RVBot bot)
+{
+    bot.state = RV_BOT_WAITING;
+}
+
+public void RV_ResetPlaybackBots()
+{
+    for (int i = 0; i < RV_NumBots; i++)
+    {
+        if (RV_IsBotPlaying(RV_Bots[i]))
+        {
+            RV_PauseBot(RV_Bots[i]);
+            RV_MoveBotToStart(RV_Bots[i]);
+        }
     }
 }

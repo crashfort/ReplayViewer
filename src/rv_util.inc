@@ -3,6 +3,8 @@
 #endif
 #define UTIL_INCLUDED
 
+#define RV_ZERO_VECTOR3 { 0.0, 0.0, 0.0 }
+
 public void RV_CopyVector3(float source[3], float dest[3])
 {
     dest[0] = source[0];
@@ -14,6 +16,14 @@ public void RV_CopyVector2(float source[2], float dest[2])
 {
     dest[0] = source[0];
     dest[1] = source[1];
+}
+
+// Copies pitch and yaw, ignores roll.
+public void RV_CopyToAngles(float source[2], float dest[3])
+{
+    dest[0] = source[0];
+    dest[1] = source[1];
+    dest[2] = 0.0;
 }
 
 public void RV_MaybeCreateDir(char[] path)
