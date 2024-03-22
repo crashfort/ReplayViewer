@@ -66,6 +66,13 @@ public void RV_RegisterCmds()
     RegConsoleCmd("sm_rv_print_stream", RV_PrintStreamCmd);
 }
 
+// Remove entities that teleport everyone to the jail after a timeout.
+public Action RV_RemoveJails(Handle timer)
+{
+    ServerCommand("ent_remove_all logic_timer");
+    return Plugin_Stop;
+}
+
 // Set some prerequisites that we want.
 public void RV_StartMapCmds()
 {
@@ -80,6 +87,8 @@ public void RV_StartMapCmds()
     ServerCommand("mp_autoteambalance 0");
     ServerCommand("bot_join_after_player 0");
     ServerCommand("mp_limitteams 0");
+
+    CreateTimer(1.0, RV_RemoveJails); // Must wait a bit before we can remove stuff.
 
     // Don't let the bot commands be overwritten.
     ServerExecute();
