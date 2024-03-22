@@ -54,11 +54,20 @@ enum struct RVStream
     ArrayList frames; // Array of RVFrame.
 }
 
+// Bot update state.
+enum RVBotState
+{
+    RV_BOT_IDLE,
+    RV_BOT_WAITING,
+    RV_BOT_PLAYING,
+}
+
 // One fake player that will be controlled by the replay stream.
 enum struct RVBot
 {
     int id; // Identifier used for client identification.
     int playback_frame; // What index in stream.frames.
+    RVBotState state; // Bot update state.
     RVStream stream; // Stream we are reading from.
 }
 
@@ -77,9 +86,9 @@ enum RVMenuId
 // System state:
 
 // References to every bot.
-RVBot RV_Bots[MAXPLAYERS + 1];
-int RV_NumBots;
-int RV_BotMaps[MAXPLAYERS + 1];
+RVBot RV_Bots[MAXPLAYERS + 1]; // Using indexes 0 and up.
+int RV_NumBots; // How many bots are actually placed in RV_Bots.
+int RV_BotMaps[MAXPLAYERS + 1]; // Remaps from client ids to bot indexes.
 
 char RV_CurrentMap[128];
 

@@ -50,6 +50,7 @@ public int RV_GetBotIdxFromId(int id)
 public void RV_InitBot(RVBot bot, int id)
 {
     bot.id = id;
+    bot.state = RV_BOT_IDLE;
 
     // PrintToServer("init bot id %d %d", id, bot.id);
 
@@ -78,6 +79,8 @@ public void RV_SpawnBot(RVBot bot, char[] name, int team)
     SetEntityGravity(bot.id, 0.0);
 
     SetClientName(bot.id, name);
+
+    bot.state = RV_BOT_WAITING;
 }
 
 public void RV_StopBot(RVBot bot)
@@ -88,12 +91,13 @@ public void RV_StopBot(RVBot bot)
     FormatEx(name_buf, sizeof(name_buf), "crashfort/ReplayViewer");
 
     SetClientName(bot.id, name_buf);
+
+    bot.state = RV_BOT_IDLE;
 }
 
 public bool RV_IsBotPlaying(RVBot bot)
 {
-    int team = GetClientTeam(bot.id);
-    return team == CS_TEAM_T || team == CS_TEAM_CT;
+    return bot.state != RV_BOT_IDLE;
 }
 
 // Set new stream.
@@ -101,8 +105,6 @@ public void RV_SetBotStream(RVBot bot, RVStream stream)
 {
     RV_FreeStream(bot.stream);
     RV_DupeStream(stream, bot.stream); // Transfer.
-
-    RV_ResetBot(bot);
 }
 
 public void RV_FreeBot(RVBot bot)
@@ -112,22 +114,19 @@ public void RV_FreeBot(RVBot bot)
 
 public void RV_BotFinished(RVBot bot)
 {
-    RV_ResetBot(bot);
     RV_StopBot(bot);
 }
 
-public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
+public void RV_UpdateBotIdle(RVBot bot)
 {
-    if (!RV_IsBotPlaying(bot))
-    {
-        return Plugin_Handled;
-    }
+}
 
-    if (bot.stream.frames == null)
-    {
-        return Plugin_Handled;
-    }
+public void RV_UpdateBotWaiting(RVBot bot)
+{
+}
 
+public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
+{
     // PrintToServer("Updating %d", bot.id);
 
     // Negative frames are used for synchronization.
@@ -158,6 +157,8 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     buttons = frame.buttons;
 
     // First frame just move to the start.
+
+    PrintToServer("%d", frame.reserved);
 
     if (bot.playback_frame <= 0)
     {
@@ -193,6 +194,32 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
     if (bot.playback_frame >= bot.stream.num_frames)
     {
         RV_BotFinished(bot);
+    }
+}
+
+public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
+{
+    if (!RV_IsBotPlaying(bot))
+    {
+        return Plugin_Handled;
+    }
+
+    switch (bot.state)
+    {
+        case RV_BOT_IDLE:
+        {
+            RV_UpdateBotIdle(bot);
+        }
+
+        case RV_BOT_WAITING:
+        {
+            RV_UpdateBotWaiting(bot);
+        }
+
+        case RV_BOT_PLAYING:
+        {
+            RV_UpdateBotPlaying(bot, buttons, wish_vel, wish_angles);
+        }
     }
 
     return Plugin_Changed;
@@ -237,9 +264,9 @@ public bool RV_SpawnBotWithStream(char[] path)
     return true;
 }
 
-public void RV_ResetBot(RVBot bot)
+public void RV_StartBot(RVBot bot)
 {
-    bot.playback_frame = 0;
+    bot.state = RV_BOT_PLAYING;
 }
 
 // Start playback.
@@ -247,7 +274,7 @@ public void RV_StartPlaybackBots()
 {
     for (int i = 0; i < RV_NumBots; i++)
     {
-        RV_ResetBot(RV_Bots[i]);
+        RV_StartBot(RV_Bots[i]);
     }
 
     // Offset everyone to the slowest starter.
@@ -280,7 +307,6 @@ public void RV_StopPlaybackBots()
 {
     for (int i = 0; i < RV_NumBots; i++)
     {
-        RV_ResetBot(RV_Bots[i]);
         RV_StopBot(RV_Bots[i]);
     }
 }
