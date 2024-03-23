@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net_extension", "src\net_extension\net_extension.vcxproj", "{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}.Debug|x86.ActiveCfg = Debug|Win32
+		{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}.Debug|x86.Build.0 = Debug|Win32
+		{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}.Release|x86.ActiveCfg = Release|Win32
+		{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B22930C0-F4F7-4C4B-9029-A4CF304E50CA}
+	EndGlobalSection
+EndGlobal

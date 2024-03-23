@@ -1,0 +1,13 @@
+.vs
+/build/
+*.dll
+*.exe
+*.sqlite
+*.ilk
+*.pdb
+*.ipdb
+*.iobj
+*.lib
+*.exp
+*.vcxproj.user
+*.vcxproj.filters

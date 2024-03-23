@@ -20,6 +20,7 @@
 #include "rv_load.inc"
 #include "rv_player.inc"
 #include "rv_round.inc"
+#include "rv_net.inc"
 
 // Main interface from SourceMod.
 
