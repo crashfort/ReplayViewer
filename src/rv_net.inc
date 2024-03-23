@@ -10,7 +10,7 @@
 native bool Net_ConnectedToInet();
 
 // Get the real name of a player from an internal player id.
-// This will send Net_PlayerNameReceived some time in the future when the network call is complete.
+// This will send Net_PlayerNameReceived or Net_PlayerNameRequestFailed some time in the future when the network call is complete.
 // Returns false if no connection is available.
 native bool Net_RequestPlayerName(int player_id);
 

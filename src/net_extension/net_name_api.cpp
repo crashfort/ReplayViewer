@@ -40,7 +40,7 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
 
     // TODO Don't know the input format.
     wchar_t buf[128];
-    StringCchPrintfW(buf, ARRAYSIZE(buf), L"%d", player_id);
+    NET_SPRINTFW(L"%d", buf, player_id);
 
     Net_MakeHttpRequest(NET_API_GET_PLAYER_NAME, buf);
 

@@ -5,6 +5,7 @@
 
 #define NET_LOCK(SRW) AcquireSRWLockExclusive((SRW))
 #define NET_UNLOCK(SRW) ReleaseSRWLockExclusive((SRW))
+#define NET_SPRINTFW(FORMAT, BUF, ...) StringCchPrintfW((BUF), ARRAYSIZE((BUF)), (FORMAT), __VA_ARGS__)
 
 using NetAPIType = int;
 
