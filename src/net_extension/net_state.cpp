@@ -64,7 +64,7 @@ NetAPIDesc* Net_FindAPIDesc(NetAPIType type)
 
 // Entrypoint for API calls.
 // Call on the main thread to give a new http request to the net thread.
-void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string)
+void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string, void* request_state)
 {
     NetAPIDesc* desc = Net_FindAPIDesc(type);
 
@@ -76,6 +76,7 @@ void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string)
     NetAPIRequest req;
     req.desc = desc;
     req.request_string = wcsdup(request_string);
+    req.request_state = request_state;
 
     NET_LOCK(&net_request_lock);
     net_requests.push_back(req);
@@ -147,12 +148,13 @@ bool Net_ReadHttpResponse(HINTERNET req)
 }
 
 // Give a response back to the main thread.
-void Net_ReturnHttpResponse(NetAPIDesc* desc, bool status, void* data)
+void Net_ReturnHttpResponse(NetAPIDesc* desc, bool status, void* data, void* request_state)
 {
     NetAPIResponse response = {};
     response.desc = desc;
     response.status = status;
     response.data = data;
+    response.request_state = request_state;
 
     NET_LOCK(&net_response_lock);
     net_responses.push_back(response);
@@ -202,7 +204,7 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
                 req = NULL;
             }
 
-            Net_ReturnHttpResponse(request->desc, status, api_response_data);
+            Net_ReturnHttpResponse(request->desc, status, api_response_data, request->request_state);
 
             free(request->request_string);
         }
@@ -257,6 +259,11 @@ void Net_ReadThreadResponses()
         if (response->data)
         {
             free(response->data);
+        }
+
+        if (response->request_state)
+        {
+            free(response->request_state);
         }
     }
 

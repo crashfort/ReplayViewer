@@ -49,6 +49,7 @@ struct NetAPIRequest
 {
     NetAPIDesc* desc; // Which API.
     wchar_t* request_string; // Formatted by the API.
+    void* request_state; // Additional information to be retrived again during the response. This gets freed for you.
 };
 
 struct NetAPIResponse
@@ -56,7 +57,8 @@ struct NetAPIResponse
     NetAPIDesc* desc; // Which API.
     bool status; // If we got anything at all.
     void* data; // Type specific response data. This gets allocated and freed for you.
+    void* request_state; // Additional information set when the request was made. This gets freed for you.
 };
 
 bool Net_ConnectedToInet();
-void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string);
+void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string, void* request_state);

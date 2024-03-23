@@ -2,9 +2,13 @@
 
 // API to get the name of a player from an internal player id.
 
+struct NetNameAPIRequest
+{
+    int player_id;
+};
+
 struct NetNameAPIResponse
 {
-    int player_id; // Player id as given in the request.
     char name[256];
 };
 
@@ -36,13 +40,16 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
         return 0;
     }
 
-    int player_id = params[1];
+    NetNameAPIRequest* req_state = (NetNameAPIRequest*)malloc(sizeof(NetNameAPIRequest));
+    *req_state = {};
+
+    req_state->player_id = params[1];
 
     // TODO Don't know the input format.
-    wchar_t buf[128];
-    NET_SPRINTFW(L"%d", buf, player_id);
+    wchar_t req_string[128];
+    NET_SPRINTFW(L"%d", req_string, req_state->player_id);
 
-    Net_MakeHttpRequest(NET_API_GET_PLAYER_NAME, buf);
+    Net_MakeHttpRequest(NET_API_GET_PLAYER_NAME, req_string, req_state);
 
     return 1;
 }
@@ -57,17 +64,18 @@ void Net_FormatNameResponse(void* input, int input_size, void* dest)
 void Net_HandleNameResponse(NetAPIResponse* response)
 {
     NetNameAPIResponse* data = (NetNameAPIResponse*)response->data;
+    NetNameAPIRequest* req_state = (NetNameAPIRequest*)response->request_state;
 
     if (response->status)
     {
-        net_player_name_received->PushCell(data->player_id);
+        net_player_name_received->PushCell(req_state->player_id);
         net_player_name_received->PushString(data->name);
         net_player_name_received->Execute();
     }
 
     else
     {
-        net_player_name_request_failed->PushCell(data->player_id);
+        net_player_name_request_failed->PushCell(req_state->player_id);
         net_player_name_request_failed->Execute();
     }
 }
