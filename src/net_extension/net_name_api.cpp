@@ -3,6 +3,8 @@
 
 // API to get the name of a player from an internal player id.
 
+extern NetAPIDesc NET_NAME_API_DESC;
+
 struct NetNameAPIRequest
 {
     int player_id;
@@ -50,7 +52,7 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
     wchar_t req_string[128];
     NET_SNPRINTFW(req_string, L"/api/get-player-name/%d", req_state->player_id);
 
-    Net_MakeHttpRequest(NET_API_GET_PLAYER_NAME, req_string, req_state);
+    Net_MakeHttpRequest(&NET_NAME_API_DESC, req_string, req_state);
 
     return 1;
 }
@@ -98,7 +100,6 @@ sp_nativeinfo_t NET_NAME_API_NATIVES[] = {
 };
 
 NetAPIDesc NET_NAME_API_DESC = NetAPIDesc {
-    NET_API_GET_PLAYER_NAME,
     sizeof(NetNameAPIResponse),
     Net_InitNameAPI,
     Net_FreeNameAPI,

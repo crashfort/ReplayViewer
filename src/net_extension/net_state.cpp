@@ -57,32 +57,10 @@ std::vector<NetAPIResponse> net_responses;
 // Only used in the main thread.
 std::vector<NetAPIResponse> net_local_responses;
 
-NetAPIDesc* Net_FindAPIDesc(NetAPIType type)
-{
-    for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
-    {
-        NetAPIDesc* desc = &NET_API_DESCS[i];
-
-        if (desc->type == type)
-        {
-            return desc;
-        }
-    }
-
-    return NULL;
-}
-
 // Entrypoint for API calls.
 // Call on the main thread to give a new http request to the net thread.
-void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string, void* request_state)
+void Net_MakeHttpRequest(NetAPIDesc* desc, const wchar_t* request_string, void* request_state)
 {
-    NetAPIDesc* desc = Net_FindAPIDesc(type);
-
-    if (desc == NULL)
-    {
-        return;
-    }
-
     NetAPIRequest req;
     req.desc = desc;
     req.request_string = wcsdup(request_string);

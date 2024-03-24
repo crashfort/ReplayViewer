@@ -10,13 +10,6 @@
 #define NET_SNPRINTFW(BUF, FORMAT, ...) StringCchPrintfW((BUF), ARRAYSIZE((BUF)), (FORMAT), __VA_ARGS__)
 #define NET_VSNPRINTFW(BUF, FORMAT, VA) StringCchVPrintfW((BUF), ARRAYSIZE((BUF)), (FORMAT), VA)
 
-using NetAPIType = int;
-
-enum /* NetAPIType */
-{
-    NET_API_GET_PLAYER_NAME,
-};
-
 struct NetAPIRequest;
 struct NetAPIResponse;
 
@@ -28,9 +21,6 @@ using NetAddHeadersFn = void(*)(NetAPIRequest* request);
 
 struct NetAPIDesc
 {
-    // Identifier.
-    NetAPIType type;
-
     // Size of response structure to be allocated.
     // The state will allocate this many bytes, so you can cast the data to your internal response structure.
     int response_size;
@@ -70,7 +60,7 @@ struct NetAPIResponse
 };
 
 bool Net_ConnectedToInet();
-void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string, void* request_state);
+void Net_MakeHttpRequest(NetAPIDesc* desc, const wchar_t* request_string, void* request_state);
 
 void Net_ClearHeaders();
 void Net_AppendHeader(const wchar_t* str);
