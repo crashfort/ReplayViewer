@@ -21,6 +21,9 @@ wchar_t net_headers[8192];
 wchar_t* net_headers_ptr; // Offset from start of net_headers where to append more headers.
 size_t net_headers_rem; // Space remaining in net_headers for more headers.
 
+// For API access.
+wchar_t* net_auth_token;
+
 HINTERNET net_inet_h;
 HINTERNET net_session_h; // Host session can remain open throughout.
 
@@ -128,6 +131,7 @@ HINTERNET Net_SendHttpRequest(NetAPIRequest* request)
     if (req_h)
     {
         Net_ClearHeaders();
+        Net_AddHeader(L"Auth-Token: %s", net_auth_token);
 
         if (request->desc->set_headers_func)
         {
@@ -295,6 +299,11 @@ void Net_TerminateHeader()
     Net_AppendHeader(L"\r\n");
 }
 
+bool Net_InitAuth()
+{
+    return true;
+}
+
 bool Net_InitInet()
 {
     // Open in synchronous mode because we intend to only call from a worker thread.
@@ -385,6 +394,11 @@ bool Net_Init()
         return false;
     }
 
+    if (!Net_InitAuth())
+    {
+        return false;
+    }
+
     if (!Net_InitThread())
     {
         return false;
@@ -411,6 +425,12 @@ void Net_AllLoaded()
 void Net_Free()
 {
     g_pSM->RemoveGameFrameHook(Net_Update);
+
+    if (net_auth_token)
+    {
+        free(net_auth_token);
+        net_auth_token = NULL;
+    }
 
     for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
     {
