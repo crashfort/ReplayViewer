@@ -247,7 +247,7 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
                 if (status)
                 {
                     api_response_data = malloc(request->desc->response_size);
-                    request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), api_response_data);
+                    status = request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), api_response_data, request);
                 }
 
                 InternetCloseHandle(req_h);

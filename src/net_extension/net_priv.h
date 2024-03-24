@@ -22,7 +22,7 @@ struct NetAPIResponse;
 
 using NetInitAPIFn = void(*)();
 using NetFreeAPIFn = void(*)();
-using NetFormatAPIResponseFn = void(*)(void* input, int input_size, void* dest);
+using NetFormatAPIResponseFn = bool(*)(void* input, int input_size, void* dest, NetAPIRequest* request);
 using NetHandleAPIResponseFn = void(*)(NetAPIResponse* response);
 using NetAddHeadersFn = void(*)(NetAPIRequest* request);
 

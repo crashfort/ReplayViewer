@@ -1,4 +1,5 @@
 #include "net_priv.h"
+#include "json.h"
 
 // API to get the name of a player from an internal player id.
 
@@ -54,11 +55,22 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
     return 1;
 }
 
-void Net_FormatNameResponse(void* input, int input_size, void* dest)
+bool Net_FormatNameResponse(void* input, int input_size, void* dest, NetAPIRequest* request)
 {
     NetNameAPIResponse* data = (NetNameAPIResponse*)dest;
 
+    json_value_t* json_root = json_parse(input, input_size);
+
+    if (json_root == NULL)
+    {
+        return false;
+    }
+
     // TODO Don't know the response format.
+
+    free(json_root);
+
+    return true;
 }
 
 void Net_HandleNameResponse(NetAPIResponse* response)
