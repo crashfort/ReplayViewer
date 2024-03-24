@@ -1,5 +1,6 @@
 #include "net_state.h"
 #include "net_priv.h"
+#include "net_util.h"
 #include <WinInet.h>
 #include <vector>
 #include <stdarg.h>
@@ -22,7 +23,7 @@ wchar_t* net_headers_ptr; // Offset from start of net_headers where to append mo
 size_t net_headers_rem; // Space remaining in net_headers for more headers.
 
 // For API access.
-wchar_t* net_auth_token;
+wchar_t net_auth_token[128];
 
 HINTERNET net_inet_h;
 HINTERNET net_session_h; // Host session can remain open throughout.
@@ -301,6 +302,25 @@ void Net_TerminateHeader()
 
 bool Net_InitAuth()
 {
+    char path[256];
+    g_pSM->BuildPath(Path_SM, path, sizeof(path), "data/replay_viewer/auth.txt");
+
+    char* token = Net_ReadFileAsString(path);
+
+    if (token == NULL)
+    {
+        return false;
+    }
+
+    if (token[0] == 0)
+    {
+        return false;
+    }
+
+    Net_ToUTF16(token, strlen(token), net_auth_token, ARRAYSIZE(net_auth_token));
+
+    free(token);
+
     return true;
 }
 
@@ -425,12 +445,6 @@ void Net_AllLoaded()
 void Net_Free()
 {
     g_pSM->RemoveGameFrameHook(Net_Update);
-
-    if (net_auth_token)
-    {
-        free(net_auth_token);
-        net_auth_token = NULL;
-    }
 
     for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
     {
