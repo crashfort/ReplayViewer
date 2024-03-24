@@ -87,10 +87,7 @@ public void RV_StopBot(RVBot bot)
 {
     ChangeClientTeam(bot.id, CS_TEAM_SPECTATOR);
 
-    char name_buf[MAX_NAME_LENGTH];
-    FormatEx(name_buf, sizeof(name_buf), "crashfort/ReplayViewer");
-
-    SetClientName(bot.id, name_buf);
+    SetClientName(bot.id, "crashfort/ReplayViewer");
 
     bot.state = RV_BOT_IDLE;
 }
