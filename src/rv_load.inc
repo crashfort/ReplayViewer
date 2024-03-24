@@ -18,7 +18,7 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
         return false;
     }
 
-    PrintToChatAll("Loaded stream \"%s\"", path);
+    // PrintToChatAll("Loaded stream \"%s\"", path);
 
     RVHeader header;
     ReadFile(file, header, sizeof(header), 4);

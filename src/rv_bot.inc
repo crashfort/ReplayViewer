@@ -251,6 +251,19 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
+#if 1
+    char path_copy[PLATFORM_MAX_PATH];
+    strcopy(path_copy, sizeof(path_copy), path);
+
+    ReplaceString(path_copy, sizeof(path_copy), ".rec", "");
+
+    int name_idx = FindCharInString(path_copy, '/', true) + 1;
+
+    char bot_name[128];
+    strcopy(bot_name, sizeof(bot_name), path_copy[name_idx]);
+#endif
+
+#if 0
     char bot_name[128];
     char time_buf[64];
 
@@ -267,6 +280,7 @@ public bool RV_SpawnBotWithStream(char[] path)
     {
         Format(bot_name, sizeof(bot_name), "[%s]", time_buf);
     }
+#endif
 
     RV_SpawnBot(RV_Bots[idx], bot_name, stream.team);
     RV_SetBotStream(RV_Bots[idx], stream); // Transfer stream.
