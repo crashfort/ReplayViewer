@@ -5,15 +5,15 @@
 #include <vector>
 #include <stdarg.h>
 
-// Quick and dirty code to retrieve player information for the replay viewer.
+// Quick and dirty code to retrieve server information for the replay viewer.
 // If this would ever grow to do more stuff then put in proper structure.
 
 const wchar_t* NET_HOST = L""; // TODO Need a host.
 
-extern NetAPIDesc NET_NAME_API_DESC;
+extern NetAPIDesc NET_PLAYER_NAME_API_DESC;
 
 NetAPIDesc NET_API_DESCS[] = {
-    NET_NAME_API_DESC,
+    NET_PLAYER_NAME_API_DESC,
 };
 
 // Headers to send with a request.

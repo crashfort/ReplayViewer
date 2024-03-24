@@ -3,14 +3,14 @@
 
 // API to get the name of a player from an internal player id.
 
-extern NetAPIDesc NET_NAME_API_DESC;
+extern NetAPIDesc NET_PLAYER_NAME_API_DESC;
 
-struct NetNameAPIRequest
+struct NetPlayerNameAPIRequest
 {
     int player_id;
 };
 
-struct NetNameAPIResponse
+struct NetPlayerNameAPIResponse
 {
     char name[256];
 };
@@ -20,16 +20,16 @@ struct NetNameAPIResponse
 IForward* net_player_name_received;
 IForward* net_player_name_failed;
 
-void Net_InitNameAPI()
+void Net_InitPlayerNameAPI()
 {
-    extern sp_nativeinfo_t NET_NAME_API_NATIVES[];
-    sharesys->AddNatives(myself, NET_NAME_API_NATIVES);
+    extern sp_nativeinfo_t NET_PLAYER_NAME_API_NATIVES[];
+    sharesys->AddNatives(myself, NET_PLAYER_NAME_API_NATIVES);
 
     net_player_name_received = forwards->CreateForward("Net_PlayerNameReceived", ET_Event, 2, NULL, Param_Cell, Param_String);
     net_player_name_failed = forwards->CreateForward("Net_PlayerNameFailed", ET_Event, 1, NULL, Param_Cell);
 }
 
-void Net_FreeNameAPI()
+void Net_FreePlayerNameAPI()
 {
     forwards->ReleaseForward(net_player_name_received);
     forwards->ReleaseForward(net_player_name_failed);
@@ -43,7 +43,7 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
         return 0;
     }
 
-    NetNameAPIRequest* req_state = (NetNameAPIRequest*)malloc(sizeof(NetNameAPIRequest));
+    NetPlayerNameAPIRequest* req_state = (NetPlayerNameAPIRequest*)malloc(sizeof(NetPlayerNameAPIRequest));
     *req_state = {};
 
     req_state->player_id = params[1];
@@ -52,14 +52,14 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
     wchar_t req_string[128];
     NET_SNPRINTFW(req_string, L"/api/get-player-name/%d", req_state->player_id);
 
-    Net_MakeHttpRequest(&NET_NAME_API_DESC, req_string, req_state);
+    Net_MakeHttpRequest(&NET_PLAYER_NAME_API_DESC, req_string, req_state);
 
     return 1;
 }
 
-bool Net_FormatNameResponse(void* input, int input_size, void* dest, NetAPIRequest* request)
+bool Net_FormatPlayerNameResponse(void* input, int input_size, void* dest, NetAPIRequest* request)
 {
-    NetNameAPIResponse* data = (NetNameAPIResponse*)dest;
+    NetPlayerNameAPIResponse* data = (NetPlayerNameAPIResponse*)dest;
 
     json_value_t* json_root = json_parse(input, input_size);
 
@@ -75,10 +75,10 @@ bool Net_FormatNameResponse(void* input, int input_size, void* dest, NetAPIReque
     return true;
 }
 
-void Net_HandleNameResponse(NetAPIResponse* response)
+void Net_HandlePlayerNameResponse(NetAPIResponse* response)
 {
-    NetNameAPIResponse* data = (NetNameAPIResponse*)response->data;
-    NetNameAPIRequest* req_state = (NetNameAPIRequest*)response->request_state;
+    NetPlayerNameAPIResponse* data = (NetPlayerNameAPIResponse*)response->data;
+    NetPlayerNameAPIRequest* req_state = (NetPlayerNameAPIRequest*)response->request_state;
 
     if (response->status)
     {
@@ -94,16 +94,16 @@ void Net_HandleNameResponse(NetAPIResponse* response)
     }
 }
 
-sp_nativeinfo_t NET_NAME_API_NATIVES[] = {
+sp_nativeinfo_t NET_PLAYER_NAME_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_RequestPlayerName", Net_RequestPlayerName },
     sp_nativeinfo_t { NULL, NULL },
 };
 
-NetAPIDesc NET_NAME_API_DESC = NetAPIDesc {
-    sizeof(NetNameAPIResponse),
-    Net_InitNameAPI,
-    Net_FreeNameAPI,
-    Net_FormatNameResponse,
-    Net_HandleNameResponse,
+NetAPIDesc NET_PLAYER_NAME_API_DESC = NetAPIDesc {
+    sizeof(NetPlayerNameAPIResponse),
+    Net_InitPlayerNameAPI,
+    Net_FreePlayerNameAPI,
+    Net_FormatPlayerNameResponse,
+    Net_HandlePlayerNameResponse,
     NULL,
 };

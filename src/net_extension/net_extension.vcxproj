@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extension.cpp" />
-    <ClCompile Include="net_name_api.cpp" />
+    <ClCompile Include="net_player_name_api.cpp" />
     <ClCompile Include="net_state.cpp" />
     <ClCompile Include="net_util.cpp" />
     <ClCompile Include="smsdk_ext.cpp" />
