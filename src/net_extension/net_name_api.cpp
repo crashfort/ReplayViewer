@@ -15,7 +15,7 @@ struct NetNameAPIResponse
 // Thse are used to give data back to the script.
 // Can only be used in the main thread.
 IForward* net_player_name_received;
-IForward* net_player_name_request_failed;
+IForward* net_player_name_failed;
 
 void Net_InitNameAPI()
 {
@@ -23,13 +23,13 @@ void Net_InitNameAPI()
     sharesys->AddNatives(myself, NET_NAME_API_NATIVES);
 
     net_player_name_received = forwards->CreateForward("Net_PlayerNameReceived", ET_Event, 2, NULL, Param_Cell, Param_String);
-    net_player_name_request_failed = forwards->CreateForward("Net_PlayerNameRequestFailed", ET_Event, 1, NULL, Param_Cell);
+    net_player_name_failed = forwards->CreateForward("Net_PlayerNameFailed", ET_Event, 1, NULL, Param_Cell);
 }
 
 void Net_FreeNameAPI()
 {
     forwards->ReleaseForward(net_player_name_received);
-    forwards->ReleaseForward(net_player_name_request_failed);
+    forwards->ReleaseForward(net_player_name_failed);
 }
 
 // Entrypoint for API.
@@ -75,8 +75,8 @@ void Net_HandleNameResponse(NetAPIResponse* response)
 
     else
     {
-        net_player_name_request_failed->PushCell(req_state->player_id);
-        net_player_name_request_failed->Execute();
+        net_player_name_failed->PushCell(req_state->player_id);
+        net_player_name_failed->Execute();
     }
 }
 
