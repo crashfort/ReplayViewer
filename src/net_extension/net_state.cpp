@@ -277,6 +277,7 @@ void Net_ClearHeaders()
 void Net_AppendHeader(const wchar_t* str)
 {
     StringCchCatExW(net_headers_ptr, net_headers_rem, str, &net_headers_ptr, &net_headers_rem, 0);
+    Net_TerminateHeader();
 }
 
 // Add a formatted string header.
@@ -291,7 +292,6 @@ void Net_AddHeader(const wchar_t* format, ...)
     va_end(va);
 
     Net_AppendHeader(buf);
-    Net_TerminateHeader();
 }
 
 void Net_TerminateHeader()
