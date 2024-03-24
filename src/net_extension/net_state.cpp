@@ -303,7 +303,7 @@ void Net_TerminateHeader()
 bool Net_InitAuth()
 {
     char path[256];
-    g_pSM->BuildPath(Path_SM, path, sizeof(path), "data/replay_viewer/auth.txt");
+    smutils->BuildPath(Path_SM, path, sizeof(path), "data/replay_viewer/auth.txt");
 
     char* token = Net_ReadFileAsString(path);
 
@@ -332,7 +332,7 @@ bool Net_InitInet()
     if (net_inet_h == NULL)
     {
         DWORD error = GetLastError();
-        g_pSM->LogError(myself, "ERROR: Could not initialize INET, starting in offline mode (%lu)", error);
+        smutils->LogError(myself, "ERROR: Could not initialize INET, starting in offline mode (%lu)", error);
         return false;
     }
 
@@ -341,7 +341,7 @@ bool Net_InitInet()
     if (net_session_h == NULL)
     {
         DWORD error = GetLastError();
-        g_pSM->LogError(myself, "ERROR: Could not create a session to host (%lu)", error);
+        smutils->LogError(myself, "ERROR: Could not create a session to host (%lu)", error);
         return false;
     }
 
@@ -430,7 +430,7 @@ bool Net_Init()
 void Net_AllLoaded()
 {
     // Used to poll completion of the network requests.
-    g_pSM->AddGameFrameHook(Net_Update);
+    smutils->AddGameFrameHook(Net_Update);
 
     extern sp_nativeinfo_t NET_NATIVES[];
     sharesys->AddNatives(myself, NET_NATIVES); // Add our own natives.
@@ -444,7 +444,7 @@ void Net_AllLoaded()
 
 void Net_Free()
 {
-    g_pSM->RemoveGameFrameHook(Net_Update);
+    smutils->RemoveGameFrameHook(Net_Update);
 
     for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
     {
