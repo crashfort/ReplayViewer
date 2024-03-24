@@ -231,6 +231,11 @@ public int RV_GetFreeBotIdx()
     return -1;
 }
 
+public bool RV_CanSpawnMoreBots()
+{
+    return RV_GetFreeBotIdx() != -1;
+}
+
 public bool RV_SpawnBotWithStream(char[] path)
 {
     int idx = RV_GetFreeBotIdx();

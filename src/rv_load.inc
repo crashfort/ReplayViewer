@@ -127,6 +127,11 @@ public void RV_AddAllReplaysForMap(int client)
             continue;
         }
 
+        if (!RV_CanSpawnMoreBots())
+        {
+            break; // We are full.
+        }
+
         FormatEx(full_path, sizeof(full_path), "%s/%s", dir_path, file_name);
 
         RV_SpawnBotWithStream(full_path);
