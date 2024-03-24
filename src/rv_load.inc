@@ -98,11 +98,11 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
 public void RV_AddAllReplaysForMap(int client)
 {
     char dir_path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, RV_CurrentMap);
+    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, rv_cur_map);
 
     if (!DirExists(dir_path))
     {
-        PrintToChat(client, "No replays exist for map %s", RV_CurrentMap);
+        PrintToChat(client, "No replays exist for map %s", rv_cur_map);
         return;
     }
 
@@ -110,7 +110,7 @@ public void RV_AddAllReplaysForMap(int client)
 
     if (dir_lister == null)
     {
-        PrintToChat(client, "Could not open directory for map %s", RV_CurrentMap);
+        PrintToChat(client, "Could not open directory for map %s", rv_cur_map);
         return;
     }
 
@@ -138,11 +138,11 @@ public void RV_AddAllReplaysForMap(int client)
 
     if (index == 0)
     {
-        PrintToChat(client, "No replays available for %s", RV_CurrentMap);
+        PrintToChat(client, "No replays available for %s", rv_cur_map);
         return;
     }
 
-    RV_SystemState = RV_SYS_REPLAYS_LOADED;
+    rv_sys_state = RV_SYS_REPLAYS_LOADED;
 }
 
 public void RV_FreeStream(RVStream stream)

@@ -109,10 +109,10 @@ enum RVMenuId
 // System state:
 
 // References to every bot.
-RVBot RV_Bots[MAXPLAYERS + 1]; // Using indexes 0 and up.
-int RV_NumBots; // How many bots are actually placed in RV_Bots.
-int RV_BotMaps[MAXPLAYERS + 1]; // Remaps from client ids to bot indexes.
+RVBot rv_bots[MAXPLAYERS + 1]; // Using indexes 0 and up.
+int rv_num_bots; // How many bots are actually placed in rv_bots.
+int rv_bot_maps[MAXPLAYERS + 1]; // Remaps from client ids to bot indexes.
 
-char RV_CurrentMap[128];
+char rv_cur_map[128];
 
-RVSystemState RV_SystemState;
+RVSystemState rv_sys_state;
