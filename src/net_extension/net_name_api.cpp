@@ -45,9 +45,9 @@ cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
 
     req_state->player_id = params[1];
 
-    // TODO Don't know the input format.
+    // TODO Don't know the input path.
     wchar_t req_string[128];
-    NET_SPRINTFW(L"%d", req_string, req_state->player_id);
+    NET_SNPRINTFW(req_string, L"/api/get-player-name/%d", req_state->player_id);
 
     Net_MakeHttpRequest(NET_API_GET_PLAYER_NAME, req_string, req_state);
 
@@ -91,5 +91,6 @@ NetAPIDesc NET_NAME_API_DESC = NetAPIDesc {
     Net_InitNameAPI,
     Net_FreeNameAPI,
     Net_FormatNameResponse,
-    Net_HandleNameResponse
+    Net_HandleNameResponse,
+    NULL,
 };

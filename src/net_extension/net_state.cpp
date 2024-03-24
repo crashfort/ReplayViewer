@@ -2,7 +2,7 @@
 #include "net_priv.h"
 #include <WinInet.h>
 #include <vector>
-#include <stdint.h>
+#include <stdarg.h>
 
 // Quick and dirty code to retrieve player information for the replay viewer.
 // If this would ever grow to do more stuff then put in proper structure.
@@ -14,6 +14,12 @@ extern NetAPIDesc NET_NAME_API_DESC;
 NetAPIDesc NET_API_DESCS[] = {
     NET_NAME_API_DESC,
 };
+
+// Headers to send with a request.
+// Only used by the net thread.
+wchar_t net_headers[8192];
+wchar_t* net_headers_ptr; // Offset from start of net_headers where to append more headers.
+size_t net_headers_rem; // Space remaining in net_headers for more headers.
 
 HINTERNET net_inet_h;
 HINTERNET net_session_h; // Host session can remain open throughout.
@@ -85,11 +91,11 @@ void Net_MakeHttpRequest(NetAPIType type, const wchar_t* request_string, void* r
     SetEvent(net_wake_event_h); // Notify net thread.
 }
 
-DWORD Net_QueryHttpNumber(HINTERNET req, DWORD query_for)
+DWORD Net_QueryHttpNumber(HINTERNET req_h, DWORD query_for)
 {
     DWORD ret = 0;
     DWORD size = sizeof(DWORD);
-    HttpQueryInfoW(req, query_for | HTTP_QUERY_FLAG_NUMBER, &ret, &size, NULL);
+    HttpQueryInfoW(req_h, query_for | HTTP_QUERY_FLAG_NUMBER, &ret, &size, NULL);
 
     return ret;
 }
@@ -106,21 +112,60 @@ DWORD NET_REQ_FLAGS = INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI | INTERNET_
 
 // Send request to server.
 // If the return value is valid, you can call Net_ReadHttpResponse.
-HINTERNET Net_SendHttpRequest(const wchar_t* url)
+HINTERNET Net_SendHttpRequest(NetAPIRequest* request)
 {
     // Note that you cannot use HTTP/2 because WinInet does not support it even when the web server is properly configured!
-    HINTERNET req = HttpOpenRequestW(net_session_h, L"GET", url, L"HTTP/1.1", NULL, NULL, NET_REQ_FLAGS, 0);
-    return req;
+    HINTERNET req_h = HttpOpenRequestW(net_session_h, L"GET", request->request_string, L"HTTP/1.1", NULL, NULL, NET_REQ_FLAGS, 0);
+
+    if (req_h == NULL)
+    {
+        // Cannot print here so need to make another mechanism.
+        DWORD error = GetLastError();
+
+        goto rfail;
+    }
+
+    if (req_h)
+    {
+        Net_ClearHeaders();
+
+        if (request->desc->set_headers_func)
+        {
+            request->desc->set_headers_func(request);
+        }
+
+        Net_TerminateHeader();
+
+        if (!HttpSendRequestW(req_h, net_headers, -1, NULL, 0))
+        {
+            // Cannot print here so need to make another mechanism.
+            DWORD error = GetLastError();
+
+            goto rfail;
+        }
+    }
+
+    goto rexit;
+
+rfail:
+    if (req_h)
+    {
+        InternetCloseHandle(req_h);
+        req_h = NULL;
+    }
+
+rexit:
+    return req_h;
 }
 
 // Read bytes of response into net_response_buffer.
-bool Net_ReadHttpResponse(HINTERNET req)
+bool Net_ReadHttpResponse(HINTERNET req_h)
 {
     net_response_buffer.clear();
 
     bool ret = false;
 
-    DWORD code = Net_QueryHttpNumber(req, HTTP_QUERY_STATUS_CODE);
+    DWORD code = Net_QueryHttpNumber(req_h, HTTP_QUERY_STATUS_CODE);
 
     if (code == HTTP_STATUS_OK)
     {
@@ -128,7 +173,7 @@ bool Net_ReadHttpResponse(HINTERNET req)
 
         while (true)
         {
-            int num_read = Net_ReadResponse(req, buf, sizeof(buf));
+            int num_read = Net_ReadResponse(req_h, buf, sizeof(buf));
 
             if (num_read == 0)
             {
@@ -188,11 +233,11 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
             bool status = false;
             void* api_response_data = NULL;
 
-            HINTERNET req = Net_SendHttpRequest(request->request_string);
+            HINTERNET req_h = Net_SendHttpRequest(request);
 
-            if (req)
+            if (req_h)
             {
-                status = Net_ReadHttpResponse(req);
+                status = Net_ReadHttpResponse(req_h);
 
                 if (status)
                 {
@@ -200,8 +245,8 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
                     request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), api_response_data);
                 }
 
-                InternetCloseHandle(req);
-                req = NULL;
+                InternetCloseHandle(req_h);
+                req_h = NULL;
             }
 
             Net_ReturnHttpResponse(request->desc, status, api_response_data, request->request_state);
@@ -213,6 +258,41 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
     }
 
     return 0; // Not used.
+}
+
+void Net_ClearHeaders()
+{
+    net_headers[0] = 0;
+
+    net_headers_ptr = net_headers;
+    net_headers_rem = ARRAYSIZE(net_headers);
+}
+
+// Add a fixed string header.
+// Call Net_TerminateHeader after you have added your headers.
+void Net_AppendHeader(const wchar_t* str)
+{
+    StringCchCatExW(net_headers_ptr, net_headers_rem, str, &net_headers_ptr, &net_headers_rem, 0);
+}
+
+// Add a formatted string header.
+// Call Net_TerminateHeader after you have added your headers.
+void Net_AddHeader(const wchar_t* format, ...)
+{
+    wchar_t buf[256];
+
+    va_list va;
+    va_start(va, format);
+    NET_VSNPRINTFW(buf, format, va);
+    va_end(va);
+
+    Net_AppendHeader(buf);
+    Net_TerminateHeader();
+}
+
+void Net_TerminateHeader()
+{
+    Net_AppendHeader(L"\r\n");
 }
 
 bool Net_InitInet()
@@ -277,7 +357,7 @@ void Net_Update(bool simulating)
 
 bool Net_InitThread()
 {
-    net_wake_event_h = CreateEventA(NULL, FALSE, FALSE, NULL);
+    net_wake_event_h = CreateEventW(NULL, FALSE, FALSE, NULL);
     net_thread_h = CreateThread(NULL, 0, Net_ThreadProc, NULL, 0, NULL);
 
     return true;
