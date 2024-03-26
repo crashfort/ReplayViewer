@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="net_player_name_api.cpp" />
+    <ClCompile Include="net_state.cpp" />
+    <ClCompile Include="net_util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="net_priv.h" />
+    <ClInclude Include="net_state.h" />
+    <ClInclude Include="net_util.h" />
+  </ItemGroup>
+</Project>
