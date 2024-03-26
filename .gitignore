@@ -10,3 +10,4 @@
 *.lib
 *.exp
 *.vcxproj.user
+*.vcxproj.filters

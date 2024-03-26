@@ -5,8 +5,6 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net_extension", "src\net_extension\net_extension.vcxproj", "{4DE1E027-CAF8-4106-ABEF-1A6885CC82DD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sm_sdk_shared", "src\sm_sdk_shared\sm_sdk_shared.vcxitems", "{69E10AB9-3F41-49D8-B4DC-7E6B42A53CB5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -23,9 +21,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B22930C0-F4F7-4C4B-9029-A4CF304E50CA}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\sm_sdk_shared\sm_sdk_shared.vcxitems*{4de1e027-caf8-4106-abef-1a6885cc82dd}*SharedItemsImports = 4
-		src\sm_sdk_shared\sm_sdk_shared.vcxitems*{69e10ab9-3f41-49d8-b4dc-7e6b42a53cb5}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
