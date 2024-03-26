@@ -15,7 +15,7 @@
     <ClCompile Include="net_player_name_api.cpp" />
     <ClCompile Include="net_state.cpp" />
     <ClCompile Include="net_util.cpp" />
-    <ClCompile Include="sdk\smsdk_ext.cpp" />
+    <ClCompile Include="$(SMSOURCE)\public\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\extension.h" />
