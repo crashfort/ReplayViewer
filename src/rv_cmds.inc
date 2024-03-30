@@ -63,7 +63,7 @@ public Action RV_PrintStreamCmd(int client, int args)
 public void RV_RegisterCmds()
 {
     RegConsoleCmd("sm_replay_viewer", RV_OpenInterfaceCmd);
-    RegConsoleCmd("sm_rv_print_stream", RV_PrintStreamCmd);
+    // RegConsoleCmd("sm_print_stream", RV_PrintStreamCmd);
 }
 
 // Remove entities that teleport everyone to the jail after a timeout.
