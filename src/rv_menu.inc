@@ -116,6 +116,8 @@ public void RV_OpenInterfaceMenu(int client)
     Menu menu = CreateMenu(RV_HandleInterfaceMenu);
     SetMenuTitle(menu, "Replay Viewer");
 
+    // Access state should be synchronized with rv_cmds.inc.
+
     switch (rv_sys_state)
     {
         case RV_SYS_IDLE:

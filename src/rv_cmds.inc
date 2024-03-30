@@ -60,10 +60,62 @@ public Action RV_PrintStreamCmd(int client, int args)
     return Plugin_Handled;
 }
 
+// Access state should be synchronized with rv_menu.inc.
+
+// Alternative to using the menu interface.
+public Action RV_StartPlaybackCmd(int client, int args)
+{
+    // Messy because this language does not have fall through switch cases.
+    if (rv_sys_state == RV_SYS_REPLAYS_LOADED || rv_sys_state == RV_SYS_PAUSED)
+    {
+        RV_StartPlayback();
+    }
+
+    return Plugin_Handled;
+}
+
+// Alternative to using the menu interface.
+public Action RV_StopPlaybackCmd(int client, int args)
+{
+    // Messy because this language does not have fall through switch cases.
+    if (rv_sys_state == RV_SYS_REPLAYS_LOADED || rv_sys_state == RV_SYS_PLAYING || rv_sys_state == RV_SYS_PAUSED)
+    {
+        RV_StopPlayback();
+    }
+
+    return Plugin_Handled;
+}
+
+// Alternative to using the menu interface.
+public Action RV_ResetPlaybackCmd(int client, int args)
+{
+    if (rv_sys_state == RV_SYS_PLAYING)
+    {
+        RV_ResetPlayback();
+    }
+
+    return Plugin_Handled;
+}
+
+// Alternative to using the menu interface.
+public Action RV_LoadAllReplaysCmd(int client, int args)
+{
+    if (rv_sys_state == RV_SYS_IDLE)
+    {
+        RV_AddAllReplaysForMap(client);
+    }
+
+    return Plugin_Handled;
+}
+
 public void RV_RegisterCmds()
 {
     RegConsoleCmd("sm_replay_viewer", RV_OpenInterfaceCmd);
     // RegConsoleCmd("sm_print_stream", RV_PrintStreamCmd);
+    RegConsoleCmd("sm_start_playback", RV_StartPlaybackCmd);
+    RegConsoleCmd("sm_stop_playback", RV_StopPlaybackCmd);
+    RegConsoleCmd("sm_reset_playback", RV_ResetPlaybackCmd);
+    RegConsoleCmd("sm_load_all_replays", RV_LoadAllReplaysCmd);
 }
 
 // Remove entities that teleport everyone to the jail after a timeout.
