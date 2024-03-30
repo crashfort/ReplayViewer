@@ -11,14 +11,28 @@ Steps 1 to 3 only have to be done once, or when respective programs have to upda
 1. Download [SourceMod](https://www.sourcemod.net/downloads.php) and [Metamod](https://www.metamodsource.net/).
 2. Extract **SourceMod** and **Metamod** archives into `cstrike/`.
 3. Extract **ReplayViewer** archive from the [releases page](https://github.com/crashfort/ReplayViewer/releases) into `cstrike/`.
----
 4. Start the game with `-insecure` or start with `svr_launcher.exe` from [SVR](https://github.com/crashfort/SourceDemoRender/).
 5. Start the map you have replays for using the console command `map <name>`.
 6. Place new replays into `cstrike/addons/sourcemod/data/replay_viewer/replays/<map name>/`.
-7. Use the replay viewer chat command `/replay_viewer` or `!replay_viewer` to open the interface. **This must be typed in the chat and not the console.**
+7. Use the chat command `/replay_viewer` to open the interface. Alternatively use the console commands below.
 8. Load all the replays you want to play using the interface
 9. Control playback using the interface.
 10. In spectator mode, you can now use `startmovie` from [SVR](https://github.com/crashfort/SourceDemoRender/).
+
+## Chat commands
+
+You can use the menu interface, or the commands below to control the replay viewer. **You must type these in the chat and not the console**, like this:
+```
+/replay_viewer
+```
+
+| Command | Description
+| ------------- | -----------------------
+| **replay_viewer** | Open the user interface.
+| **load_all_replays** | Load all replays for the current map. All replays located in `cstrike/addons/sourcemod/data/replay_viewer/replays/<map name>/` will be loaded. No replays must be loaded before this can be used.
+| **start_playback** | Start the playback of all loaded replays. Replays must have been loaded before this can be used.
+| **stop_playback** | Stop and remove all replays. Replays must have been loaded before this can be used.
+| **reset_playback** | Stop playback and return all replays to the start. Replays must have been loaded before this can be used.
 
 ## Building the SourcePawn code
 
