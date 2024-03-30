@@ -1,20 +1,9 @@
-#include "net_state.h"
 #include "net_priv.h"
-#include "net_util.h"
-#include <WinInet.h>
-#include <vector>
-#include <stdarg.h>
 
 // Quick and dirty code to retrieve server information for the replay viewer.
 // If this would ever grow to do more stuff then put in proper structure.
 
 const wchar_t* NET_HOST = L""; // TODO Need a host.
-
-extern NetAPIDesc NET_PLAYER_NAME_API_DESC;
-
-NetAPIDesc NET_API_DESCS[] = {
-    NET_PLAYER_NAME_API_DESC,
-};
 
 // Headers to send with a request.
 // Only used by the net thread.
@@ -415,7 +404,7 @@ void Net_AllLoaded()
     extern sp_nativeinfo_t NET_NATIVES[];
     sharesys->AddNatives(myself, NET_NATIVES); // Add our own natives.
 
-    for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
+    for (size_t i = 0; i < NET_NUM_API_DESCS; i++)
     {
         NetAPIDesc* desc = &NET_API_DESCS[i];
         desc->init_func();
@@ -426,7 +415,7 @@ void Net_Free()
 {
     smutils->RemoveGameFrameHook(Net_Update);
 
-    for (size_t i = 0; i < ARRAYSIZE(NET_API_DESCS); i++)
+    for (size_t i = 0; i < NET_NUM_API_DESCS; i++)
     {
         NetAPIDesc* desc = &NET_API_DESCS[i];
         desc->free_func();

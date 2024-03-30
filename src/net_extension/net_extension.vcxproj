@@ -11,13 +11,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="net_apis.cpp" />
+    <None Include="net_download_replay_api.cpp" />
     <ClCompile Include="sdk\extension.cpp" />
-    <ClCompile Include="net_player_name_api.cpp" />
-    <ClCompile Include="net_state.cpp" />
-    <ClCompile Include="net_util.cpp" />
+    <None Include="net_player_name_api.cpp" />
+    <None Include="net_state.cpp" />
+    <None Include="net_util.cpp" />
     <ClCompile Include="$(SMSOURCE)\public\smsdk_ext.cpp" />
+    <ClCompile Include="unity_net.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="net_api.h" />
+    <ClInclude Include="net_apis.h" />
     <ClInclude Include="sdk\extension.h" />
     <ClInclude Include="net_priv.h" />
     <ClInclude Include="net_state.h" />

@@ -1,6 +1,4 @@
-#include "net_util.h"
-#include <stdint.h>
-#include <Windows.h>
+#include "net_priv.h"
 
 char* Net_ReadFileAsString(const char* path)
 {
