@@ -287,11 +287,13 @@ bool Net_InitAuth()
 
     if (token == NULL)
     {
+        smutils->LogError(myself, "ERROR: Could not load auth file");
         return false;
     }
 
     if (token[0] == 0)
     {
+        smutils->LogError(myself, "ERROR: Auth file is empty");
         return false;
     }
 
