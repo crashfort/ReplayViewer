@@ -3,20 +3,21 @@
 #endif
 #define PLAYER_INCLUDED
 
-// Player overrides.
+// Stuff for all players (including bots and the main player).
 
 public Action RV_OnPlayerSpawn(Event event, const char[] name, bool dont_broadcast)
 {
     int userid = GetEventInt(event, "userid");
     int client = GetClientOfUserId(userid);
 
-    // Disables player collision.
-    SetEntData(client, RV_OffsetCollisionGroup, COLLISION_GROUP_DEBRIS_TRIGGER, 4, true);
+    // Disable player to player collision.
+    Eng_SetClientCollisionGroup(client, ENG_COLLISION_GROUP_DEBRIS_TRIGGER);
 
     return Plugin_Continue;
 }
 
 public void RV_InitPlayer()
 {
+    // Catches the local player and also all bots.
     HookEvent("player_spawn", RV_OnPlayerSpawn);
 }

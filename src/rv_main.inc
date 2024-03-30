@@ -16,7 +16,6 @@ public void RV_CreateDirs()
 
 public void RV_PluginStart()
 {
-    RV_InitEngine();
     RV_InitPlayer();
     RV_InitRound();
 
