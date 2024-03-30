@@ -36,7 +36,7 @@ void Net_FreePlayerNameAPI()
 }
 
 // Entrypoint for API.
-cell_t Net_RequestPlayerName(IPluginContext* pContext, const cell_t* params)
+cell_t Net_RequestPlayerName(IPluginContext* context, const cell_t* params)
 {
     if (!Net_ConnectedToInet())
     {

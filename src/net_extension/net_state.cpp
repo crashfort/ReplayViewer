@@ -380,7 +380,7 @@ bool Net_ConnectedToInet()
     return true;
 }
 
-cell_t Net_ConnectedToInet(IPluginContext* pContext, const cell_t* params)
+cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
 {
     return Net_ConnectedToInet();
 }
