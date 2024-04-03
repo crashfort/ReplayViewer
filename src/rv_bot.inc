@@ -111,13 +111,41 @@ public void RV_FreeBot(RVBot bot)
 
 public void RV_BotFinished(RVBot bot)
 {
-    RV_StopBot(bot);
+    bot.state = RV_BOT_FINISHED;
+
+    // Maybe need to do something when everyone finished.
+#if 0
+    int num_playing = 0;
+
+    for (int i = 0; i < rv_num_bots; i++)
+    {
+        if (RV_IsBotPlaying(rv_bots[i]))
+        {
+            num_playing++;
+            break;
+        }
+    }
+
+    if (num_playing == 0)
+    {
+    }
+#endif
 }
 
 public void RV_UpdateBotWaiting(RVBot bot, int& buttons, float wish_vel[3], float wish_angles[3])
 {
-    buttons = 0;
+    RVFrame frame;
+    GetArrayArray(bot.stream.frames, 0, frame);
+
     wish_vel = RV_ZERO_VECTOR3;
+
+    float view_angles[3];
+    RV_CopyToAngles(frame.angles, view_angles);
+    RV_CopyToAngles(frame.angles, wish_angles);
+
+    buttons = frame.buttons;
+
+    TeleportEntity(bot.id, frame.position, view_angles, RV_ZERO_VECTOR3);
 }
 
 public void RV_MoveBotToStart(RVBot bot)
@@ -148,13 +176,10 @@ public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], floa
 
     // Parameter overrides to ensure a smooth playback
 
-    wish_vel[0] = 0.0;
-    wish_vel[1] = 0.0;
-    wish_vel[2] = 0.0;
+    wish_vel = RV_ZERO_VECTOR3;
 
     float view_angles[3];
     RV_CopyToAngles(frame.angles, view_angles);
-
     RV_CopyToAngles(frame.angles, wish_angles);
 
     buttons = frame.buttons;
@@ -212,6 +237,12 @@ public Action RV_RunBotCmd(RVBot bot, int& buttons, float wish_vel[3], float wis
         case RV_BOT_PLAYING:
         {
             RV_UpdateBotPlaying(bot, buttons, wish_vel, wish_angles);
+        }
+
+        case RV_BOT_FINISHED:
+        {
+            // When finished, stay at the last frame indefinitely.
+            return Plugin_Handled;
         }
     }
 

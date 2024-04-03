@@ -83,6 +83,7 @@ enum RVBotState
     RV_BOT_IDLE,
     RV_BOT_WAITING,
     RV_BOT_PLAYING,
+    RV_BOT_FINISHED,
 }
 
 // One fake player that will be controlled by the replay stream.
