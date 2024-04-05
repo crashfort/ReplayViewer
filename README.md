@@ -33,6 +33,7 @@ You can use the menu interface, or the commands below to control the replay view
 | **start_playback** | Start the playback of all loaded replays. Replays must have been loaded before this can be used.
 | **stop_playback** | Stop and remove all replays. Replays must have been loaded before this can be used.
 | **reset_playback** | Stop playback and return all replays to the start. Replays must have been loaded before this can be used.
+| **sm_print_times** | Show the duration of every loaded replay. This can be used to find the needed region for region rendering with SVR. Replays must have been loaded before this can be used.
 
 ## Building the SourcePawn code
 
