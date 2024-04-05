@@ -167,11 +167,9 @@ public void RV_FreeStream(RVStream stream)
 
 public void RV_DupeStream(RVStream source, RVStream dest)
 {
-    dest.start_offset = source.start_offset;
-    dest.num_frames = source.num_frames;
-    dest.num_bookmarks = source.num_bookmarks;
-    dest.frames = RV_CloneArrayHandle(source.frames);
+    dest = source;
     dest.bookmarks = RV_CloneArrayHandle(source.bookmarks);
+    dest.frames = RV_CloneArrayHandle(source.frames);
 }
 
 // Extract additional information from the file name if we can.

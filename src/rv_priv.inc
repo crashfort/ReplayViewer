@@ -104,6 +104,7 @@ enum RVMenuId
     RV_MENU_START_PLAYBACK,
     RV_MENU_STOP_PLAYBACK,
     RV_MENU_RESET_PLAYBACK,
+    RV_MENU_SHOW_REPLAY_TIMES,
 };
 
 // -----------------------------------

@@ -108,6 +108,36 @@ public Action RV_LoadAllReplaysCmd(int client, int args)
     return Plugin_Handled;
 }
 
+public void RV_ShowReplayTimes()
+{
+    float frame_time = GetGameFrameTime();
+    char time_buf[64];
+    char name_buf[64];
+
+    // Messy because this language does not have fall through switch cases.
+    if (rv_sys_state == RV_SYS_REPLAYS_LOADED || rv_sys_state == RV_SYS_PAUSED)
+    {
+        PrintToChatAll("Durations of replays:");
+
+        for (int i = 0; i < rv_num_bots; i++)
+        {
+            if (RV_IsBotPlaying(rv_bots[i]))
+            {
+                GetClientName(rv_bots[i].id, name_buf, sizeof(name_buf));
+                RV_FormatTime(time_buf, sizeof(time_buf), RV_FramesToTime(rv_bots[i].stream.duration, frame_time));
+
+                PrintToChatAll("%s: %s", name_buf, time_buf);
+            }
+        }
+    }
+}
+
+public Action RV_PrintTimesCmd(int client, int args)
+{
+    RV_ShowReplayTimes();
+    return Plugin_Handled;
+}
+
 public void RV_RegisterCmds()
 {
     RegConsoleCmd("sm_replay_viewer", RV_OpenInterfaceCmd);
@@ -116,6 +146,7 @@ public void RV_RegisterCmds()
     RegConsoleCmd("sm_stop_playback", RV_StopPlaybackCmd);
     RegConsoleCmd("sm_reset_playback", RV_ResetPlaybackCmd);
     RegConsoleCmd("sm_load_all_replays", RV_LoadAllReplaysCmd);
+    RegConsoleCmd("sm_print_times", RV_PrintTimesCmd);
 }
 
 // Remove entities that teleport everyone to the jail after a timeout.

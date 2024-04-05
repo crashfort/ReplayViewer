@@ -43,6 +43,8 @@ public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int
 
     else if (action == MenuAction_Cancel)
     {
+        int client = param1;
+        RV_OpenInterfaceMenu(client);
     }
 
     else if (action == MenuAction_End)
@@ -95,6 +97,12 @@ public int RV_HandleInterfaceMenu(Menu menu, MenuAction action, int param1, int 
                 RV_ResetPlayback();
                 RV_OpenInterfaceMenu(client);
             }
+
+            case RV_MENU_SHOW_REPLAY_TIMES:
+            {
+                RV_ShowReplayTimes();
+                RV_OpenInterfaceMenu(client);
+            }
         }
     }
 
@@ -129,6 +137,7 @@ public void RV_OpenInterfaceMenu(int client)
         {
             RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
             RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_SHOW_REPLAY_TIMES, "Show times");
         }
 
         case RV_SYS_PLAYING:
@@ -141,6 +150,7 @@ public void RV_OpenInterfaceMenu(int client)
         {
             RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
             RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
+            RV_MenuAddEnumItem(menu, RV_MENU_SHOW_REPLAY_TIMES, "Show times");
         }
     }
 
