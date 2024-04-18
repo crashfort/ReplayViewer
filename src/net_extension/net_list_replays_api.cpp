@@ -105,6 +105,11 @@ void Net_FreeReplayListResponse(NetAPIResponse* response)
 
     if (response_state)
     {
+        if (response_state->listings)
+        {
+            Net_Free(response_state->listings);
+        }
+
         Net_Free(response_state);
     }
 
