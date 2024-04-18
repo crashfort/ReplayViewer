@@ -2,4 +2,4 @@
 
 bool Net_Init();
 void Net_AllLoaded();
-void Net_Free();
+void Net_Shutdown();

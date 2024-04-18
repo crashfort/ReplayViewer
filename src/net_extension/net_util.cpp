@@ -16,7 +16,7 @@ char* Net_ReadFileAsString(const char* path)
 
     if (large.HighPart == 0 && large.LowPart < INT32_MAX)
     {
-        ret = (char*)malloc(large.LowPart + 1);
+        ret = (char*)Net_Alloc(large.LowPart + 1);
 
         ReadFile(h, ret, large.LowPart, NULL, NULL);
 
@@ -28,9 +28,9 @@ char* Net_ReadFileAsString(const char* path)
     return ret;
 }
 
-int Net_ToUTF16(const char* value, int value_length, wchar_t* buf, int buf_chars)
+int32_t Net_ToUTF16(const char* value, int32_t value_length, wchar_t* buf, int32_t buf_chars)
 {
-    int length = MultiByteToWideChar(CP_UTF8, 0, value, value_length, buf, buf_chars);
+    int32_t length = MultiByteToWideChar(CP_UTF8, 0, value, value_length, buf, buf_chars);
 
     if (length < buf_chars)
     {
@@ -38,4 +38,21 @@ int Net_ToUTF16(const char* value, int value_length, wchar_t* buf, int buf_chars
     }
 
     return length;
+}
+
+void* Net_Alloc(int32_t size)
+{
+    return malloc(size);
+}
+
+void* Net_ZAlloc(int32_t size)
+{
+    void* m = Net_Alloc(size);
+    memset(m, 0, size);
+    return m;
+}
+
+void Net_Free(void* addr)
+{
+    free(addr);
 }

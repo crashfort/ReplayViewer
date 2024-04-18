@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <vector>
+#include <assert.h>
 #include "json.h"
 
 #include "net_state.h"
@@ -16,5 +17,7 @@
 #define NET_LOCK(SRW) AcquireSRWLockExclusive((SRW))
 #define NET_UNLOCK(SRW) ReleaseSRWLockExclusive((SRW))
 
-#define NET_SNPRINTFW(BUF, FORMAT, ...) StringCchPrintfW((BUF), ARRAYSIZE((BUF)), (FORMAT), __VA_ARGS__)
-#define NET_VSNPRINTFW(BUF, FORMAT, VA) StringCchVPrintfW((BUF), ARRAYSIZE((BUF)), (FORMAT), VA)
+#define NET_ARRAY_SIZE(A) (sizeof(A) / sizeof(A[0]))
+#define NET_SNPRINTFW(BUF, FORMAT, ...) StringCchPrintfW((BUF), NET_ARRAY_SIZE((BUF)), (FORMAT), __VA_ARGS__)
+#define NET_VSNPRINTFW(BUF, FORMAT, VA) StringCchVPrintfW((BUF), NET_ARRAY_SIZE((BUF)), (FORMAT), VA)
+#define NET_COPY_STRING(SOURCE, DEST) StringCchCopyA((DEST), NET_ARRAY_SIZE((DEST)), (SOURCE))

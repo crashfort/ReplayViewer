@@ -43,7 +43,7 @@ bool NetExtension::SDK_OnLoad(char* error, size_t maxlen, bool late)
 
 void NetExtension::SDK_OnUnload()
 {
-    Net_Free();
+    Net_Shutdown();
 }
 
 void NetExtension::SDK_OnAllLoaded()

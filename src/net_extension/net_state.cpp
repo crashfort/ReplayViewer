@@ -71,7 +71,7 @@ DWORD Net_QueryHttpNumber(HINTERNET req_h, DWORD query_for)
     return ret;
 }
 
-int Net_ReadResponse(HINTERNET response_h, void* buf, int buf_size)
+int32_t Net_ReadResponse(HINTERNET response_h, void* buf, int32_t buf_size)
 {
     DWORD actually_read = 0;
     InternetReadFile(response_h, buf, buf_size, &actually_read);
@@ -99,13 +99,7 @@ HINTERNET Net_SendHttpRequest(NetAPIRequest* request)
     if (req_h)
     {
         Net_ClearHeaders();
-        Net_AddHeader(L"Auth-Token: %s", net_auth_token);
-
-        if (request->desc->set_headers_func)
-        {
-            request->desc->set_headers_func(request);
-        }
-
+        Net_AddHeader(L"Authorization: Bearer %s", net_auth_token);
         Net_TerminateHeader();
 
         if (!HttpSendRequestW(req_h, net_headers, -1, NULL, 0))
@@ -145,7 +139,7 @@ bool Net_ReadHttpResponse(HINTERNET req_h)
 
         while (true)
         {
-            int num_read = Net_ReadResponse(req_h, buf, sizeof(buf));
+            int32_t num_read = Net_ReadResponse(req_h, buf, sizeof(buf));
 
             if (num_read == 0)
             {
@@ -165,16 +159,10 @@ bool Net_ReadHttpResponse(HINTERNET req_h)
 }
 
 // Give a response back to the main thread.
-void Net_ReturnHttpResponse(NetAPIDesc* desc, bool status, void* data, void* request_state)
+void Net_ReturnHttpResponse(NetAPIResponse* response)
 {
-    NetAPIResponse response = {};
-    response.desc = desc;
-    response.status = status;
-    response.data = data;
-    response.request_state = request_state;
-
     NET_LOCK(&net_response_lock);
-    net_responses.push_back(response);
+    net_responses.push_back(*response);
     NET_UNLOCK(&net_response_lock);
 }
 
@@ -201,29 +189,32 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
         for (size_t i = 0; i < net_local_requests.size(); i++)
         {
             NetAPIRequest* request = &net_local_requests[i];
-
-            bool status = false;
-            void* api_response_data = NULL;
-
             HINTERNET req_h = Net_SendHttpRequest(request);
+
+            NetAPIResponse response = {};
+            response.desc = request->desc;
+            response.status = false;
+            response.request_state = request->request_state;
 
             if (req_h)
             {
-                status = Net_ReadHttpResponse(req_h);
+                response.status = Net_ReadHttpResponse(req_h);
 
-                if (status)
+                if (response.status)
                 {
-                    api_response_data = malloc(request->desc->response_size);
-                    status = request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), api_response_data, request);
+                    // The API must format the response now.
+                    response.response_state = request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), request);
+                    response.status = response.response_state != NULL;
                 }
 
                 InternetCloseHandle(req_h);
                 req_h = NULL;
             }
 
-            Net_ReturnHttpResponse(request->desc, status, api_response_data, request->request_state);
+            // Return the response. It may or may not have worked.
+            Net_ReturnHttpResponse(&response);
 
-            free(request->request_string);
+            Net_Free(request->request_string);
         }
 
         net_local_requests.clear();
@@ -237,7 +228,7 @@ void Net_ClearHeaders()
     net_headers[0] = 0;
 
     net_headers_ptr = net_headers;
-    net_headers_rem = ARRAYSIZE(net_headers);
+    net_headers_rem = NET_ARRAY_SIZE(net_headers);
 }
 
 // Add a fixed string header.
@@ -267,6 +258,17 @@ void Net_TerminateHeader()
     Net_AppendHeader(L"\r\n");
 }
 
+NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle)
+{
+    return (NetAPIResponse*)response_handle;
+}
+
+int32_t Net_MakeResponseHandle(NetAPIResponse* response)
+{
+    assert(response->status); // Must only be called on a valid response.
+    return (int32_t)response;
+}
+
 bool Net_InitAuth()
 {
     char path[256];
@@ -280,15 +282,9 @@ bool Net_InitAuth()
         return false;
     }
 
-    if (token[0] == 0)
-    {
-        smutils->LogError(myself, "ERROR: Auth file is empty");
-        return false;
-    }
+    Net_ToUTF16(token, strlen(token), net_auth_token, NET_ARRAY_SIZE(net_auth_token));
 
-    Net_ToUTF16(token, strlen(token), net_auth_token, ARRAYSIZE(net_auth_token));
-
-    free(token);
+    Net_Free(token);
 
     return true;
 }
@@ -319,6 +315,12 @@ bool Net_InitInet()
     return true;
 }
 
+void Net_FreeResponse(NetAPIResponse* response)
+{
+    response->desc->free_response_func(response);
+    Net_Free(response);
+}
+
 // Used to poll completion of the network requests from the net thread.
 void Net_ReadThreadResponses()
 {
@@ -332,17 +334,17 @@ void Net_ReadThreadResponses()
     for (size_t i = 0; i < net_local_responses.size(); i++)
     {
         NetAPIResponse* response = &net_local_responses[i];
+
+        // Still call even if the response failed, in order to call script functions.
         response->desc->handle_response_func(response);
 
-        if (response->data)
+        // Automatically free if the response failed, since there won't be any option to call Net_CloseHandle.
+        if (!response->status)
         {
-            free(response->data);
+            Net_FreeResponse(response);
         }
 
-        if (response->request_state)
-        {
-            free(response->request_state);
-        }
+        // If the response worked, the script must call Net_CloseHandle to free the response.
     }
 
     net_local_responses.clear();
@@ -374,6 +376,18 @@ bool Net_ConnectedToInet()
 cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
 {
     return Net_ConnectedToInet();
+}
+
+cell_t Net_CloseHandle(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+
+    if (response)
+    {
+        Net_FreeResponse(response);
+    }
+
+    return 1;
 }
 
 bool Net_Init()
@@ -411,7 +425,7 @@ void Net_AllLoaded()
     }
 }
 
-void Net_Free()
+void Net_Shutdown()
 {
     smutils->RemoveGameFrameHook(Net_Update);
 
@@ -455,5 +469,6 @@ void Net_Free()
 
 sp_nativeinfo_t NET_NATIVES[] = {
     sp_nativeinfo_t { "Net_ConnectedToInet", Net_ConnectedToInet },
+    sp_nativeinfo_t { "Net_CloseHandle", Net_CloseHandle },
     sp_nativeinfo_t { NULL, NULL },
 };
