@@ -4,11 +4,6 @@
 
 extern NetAPIDesc NET_MAP_INFO_API_DESC;
 
-struct NetMapInfoAPIRequest
-{
-    int32_t user_id;
-};
-
 struct NetMapInfoAPIResponse
 {
     int32_t num_stages;
@@ -25,8 +20,8 @@ void Net_InitMapInfoAPI()
     extern sp_nativeinfo_t NET_MAP_INFO_API_NATIVES[];
     sharesys->AddNatives(myself, NET_MAP_INFO_API_NATIVES);
 
-    net_map_info_dl_received = forwards->CreateForward("Net_MapInfoDownloadReceived", ET_Event, 2, NULL, Param_Cell, Param_Cell);
-    net_map_info_dl_failed = forwards->CreateForward("Net_MapInfoDownloadFailed", ET_Event, 1, NULL, Param_Cell);
+    net_map_info_dl_received = forwards->CreateForward("Net_MapInfoDownloadReceived", ET_Event, 1, NULL, Param_Cell);
+    net_map_info_dl_failed = forwards->CreateForward("Net_MapInfoDownloadFailed", ET_Event, 0, NULL);
 }
 
 void Net_FreeMapInfoAPI()
@@ -45,14 +40,11 @@ cell_t Net_DownloadMapInfo(IPluginContext* context, const cell_t* params)
 
     const char* map = gamehelpers->GetCurrentMap();
 
-    NetMapInfoAPIRequest* request_state = NET_ZALLOC(NetMapInfoAPIRequest);
-    request_state->user_id = params[1];
-
     // TODO Don't know the input path.
     wchar_t req_string[128];
     NET_SNPRINTFW(req_string, L"");
 
-    Net_MakeHttpRequest(&NET_MAP_INFO_API_DESC, req_string, request_state);
+    Net_MakeHttpRequest(&NET_MAP_INFO_API_DESC, req_string, NULL);
 
     return 1;
 }
@@ -70,19 +62,16 @@ void* Net_FormatMapInfoResponse(void* input, int32_t input_size, NetAPIRequest* 
 // Called in the main thread to do something with the response.
 void Net_HandleMapInfoResponse(NetAPIResponse* response)
 {
-    NetMapInfoAPIRequest* request_state = (NetMapInfoAPIRequest*)response->request_state;
     NetMapInfoAPIResponse* response_state = (NetMapInfoAPIResponse*)response->response_state;
 
     if (response->status)
     {
-        net_map_info_dl_received->PushCell(request_state->user_id);
         net_map_info_dl_received->PushCell(Net_MakeResponseHandle(response)); // Give handle to script.
         net_map_info_dl_received->Execute();
     }
 
     else
     {
-        net_map_info_dl_failed->PushCell(request_state->user_id);
         net_map_info_dl_failed->Execute();
     }
 }
@@ -90,17 +79,11 @@ void Net_HandleMapInfoResponse(NetAPIResponse* response)
 // Called when the script calls Net_CloseHandle on the handle from Net_MakeResponseHandle or automatically by the net state when the response fails.
 void Net_FreeMapInfoResponse(NetAPIResponse* response)
 {
-    NetMapInfoAPIRequest* request_state = (NetMapInfoAPIRequest*)response->request_state;
     NetMapInfoAPIResponse* response_state = (NetMapInfoAPIResponse*)response->response_state;
 
     if (response_state)
     {
         Net_Free(response_state);
-    }
-
-    if (request_state)
-    {
-        Net_Free(request_state);
     }
 }
 

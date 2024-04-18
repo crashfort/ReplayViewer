@@ -6,7 +6,6 @@ extern NetAPIDesc NET_REPLAY_LIST_API_DESC;
 
 struct NetReplayListAPIRequest
 {
-    int32_t user_id;
     int32_t zone_id;
     int32_t angle_type;
 };
@@ -33,8 +32,8 @@ void Net_InitReplayListAPI()
     extern sp_nativeinfo_t NET_REPLAY_LIST_API_NATIVES[];
     sharesys->AddNatives(myself, NET_REPLAY_LIST_API_NATIVES);
 
-    net_replay_list_dl_received = forwards->CreateForward("Net_ReplayListDownloadReceived", ET_Event, 2, NULL, Param_Cell, Param_Cell);
-    net_replay_list_dl_failed = forwards->CreateForward("Net_ReplayListDownloadFailed", ET_Event, 1, NULL, Param_Cell);
+    net_replay_list_dl_received = forwards->CreateForward("Net_ReplayListDownloadReceived", ET_Event, 1, NULL, Param_Cell);
+    net_replay_list_dl_failed = forwards->CreateForward("Net_ReplayListDownloadFailed", ET_Event, 0, NULL);
 }
 
 void Net_FreeReplayListAPI()
@@ -54,9 +53,8 @@ cell_t Net_DownloadReplayList(IPluginContext* context, const cell_t* params)
     const char* map = gamehelpers->GetCurrentMap();
 
     NetReplayListAPIRequest* request_state = NET_ZALLOC(NetReplayListAPIRequest);
-    request_state->user_id = params[1];
-    request_state->zone_id = params[2];
-    request_state->angle_type = params[3];
+    request_state->zone_id = params[1];
+    request_state->angle_type = params[2];
 
     // TODO Don't know the input path.
     wchar_t req_string[128];
@@ -85,14 +83,12 @@ void Net_HandleReplayListResponse(NetAPIResponse* response)
 
     if (response->status)
     {
-        net_replay_list_dl_received->PushCell(request_state->user_id);
         net_replay_list_dl_received->PushCell(Net_MakeResponseHandle(response)); // Give handle to script.
         net_replay_list_dl_received->Execute();
     }
 
     else
     {
-        net_replay_list_dl_failed->PushCell(request_state->user_id);
         net_replay_list_dl_failed->Execute();
     }
 }

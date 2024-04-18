@@ -34,31 +34,28 @@ stock int Net_GetBonusZone(int idx)
 native bool Net_ConnectedToInet();
 
 // Get information about the current map, such as the zones.
-// The user id is optional, but can be used to identify parallel requests.
-native bool Net_DownloadMapInfo(int user_id);
-forward void Net_MapInfoDownloadReceived(int user_id, int response_handle); // Sent in response to Net_DownloadMapInfo to return the response.
-forward void Net_MapInfoDownloadFailed(int user_id); // Sent in response to Net_DownloadMapInfo if the download failed.
+native bool Net_DownloadMapInfo();
+forward void Net_MapInfoDownloadReceived(int response_handle); // Sent in response to Net_DownloadMapInfo to return the response.
+forward void Net_MapInfoDownloadFailed(); // Sent in response to Net_DownloadMapInfo if the download failed.
 native int Net_MapInfoGetNumStages(int response_handle); // Get number of stages.
 native int Net_MapInfoGetNumBonuses(int response_handle); // Get number of bonuses.
 
 // Download a list of possible replays for a given zone in a leaderboard.
 // See NET_ZONE_MAP, Net_GetStageZone and Net_GetBonusZone to get a zone id from a logical stage number.
 // See NET_ANGLE_TYPE constants for angled leaderboards.
-// The user id is optional, but can be used to identify parallel requests.
-native bool Net_DownloadReplayList(int user_id, int zone_id, int angle_type);
-forward void Net_ReplayListDownloadReceived(int user_id, int response_handle); // Sent in response to Net_DownloadReplayList to return the response.
-forward void Net_ReplayListDownloadFailed(int user_id); // Sent in response to Net_DownloadReplayList if the download failed.
+native bool Net_DownloadReplayList(int zone_id, int angle_type);
+forward void Net_ReplayListDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplayList to return the response.
+forward void Net_ReplayListDownloadFailed(); // Sent in response to Net_DownloadReplayList if the download failed.
 native int Net_ReplayListGetNum(int response_handle); // Get how many replays there are.
 native void Net_ReplayListGetPlayerName(int response_handle, int idx, char[] dest, int dest_size); // Get the player name of a replay.
 native int Net_ReplayListGetTime(int response_handle, int idx); // Get the finishing time of a replay.
 
 // Download a particular replay for the given zone and leaderboard.
-// The index comes from the zone replay list.
+// The replay index comes from the zone replay list.
 // To get the correct values for these parameters, you should use the result from Net_DownloadMapInfo and Net_DownloadReplayList.
 // This will send Net_ReplayDownloadReceived or Net_ReplayDownloadFailed some time in the future when the network call is complete.
-// The user id is optional, but can be used to identify parallel requests.
-native bool Net_DownloadReplay(int user_id, int zone_id, int angle_type, int index);
-forward void Net_ReplayDownloadReceived(int user_id, int response_handle); // Sent in response to Net_DownloadReplay to return the response.
-forward void Net_ReplayDownloadFailed(int user_id); // Sent in response to Net_DownloadReplay if the download failed.
+native bool Net_DownloadReplay(int zone_id, int angle_type, int replay_idx);
+forward void Net_ReplayDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplay to return the response.
+forward void Net_ReplayDownloadFailed(); // Sent in response to Net_DownloadReplay if the download failed.
 native bool Net_ReplayDownloadReadData(int response_handle, any[] items, int num_items, int size); // Read from the response file.
 native void Net_ReplayDownloadRewind(int response_handle); // Reset the reading position of the response file.
