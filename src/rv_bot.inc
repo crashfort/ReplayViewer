@@ -284,7 +284,6 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
-#if 1
     char path_copy[PLATFORM_MAX_PATH];
     strcopy(path_copy, sizeof(path_copy), path);
 
@@ -294,26 +293,6 @@ public bool RV_SpawnBotWithStream(char[] path)
 
     char bot_name[128];
     strcopy(bot_name, sizeof(bot_name), path_copy[name_idx]);
-#endif
-
-#if 0
-    char bot_name[128];
-    char time_buf[64];
-
-    RV_FormatTime(time_buf, sizeof(time_buf), RV_FramesToTime(stream.duration, GetTickInterval()));
-
-    RVFileMeta meta;
-
-    if (RV_ParseFileMeta(path, meta))
-    {
-        Format(bot_name, sizeof(bot_name), "[%s] %d", time_buf, meta.player_id);
-    }
-
-    else
-    {
-        Format(bot_name, sizeof(bot_name), "[%s]", time_buf);
-    }
-#endif
 
     RV_SpawnBot(rv_bots[idx], bot_name, stream.team);
     RV_SetBotStream(rv_bots[idx], stream); // Transfer stream.

@@ -19,14 +19,6 @@ enum RVSystemState
     RV_SYS_PAUSED,
 }
 
-enum struct RVFileMeta
-{
-    int map_id; // Internal map identifier.
-    int mode; // Internal finish mode (forwards, sideways etc).
-    int player_id; // Internal player identifier.
-    int timestamp[2]; // Unix timestamp low and high bits.
-}
-
 // Data that we read from the file.
 enum struct RVHeader
 {
