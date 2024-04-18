@@ -140,8 +140,8 @@ public void RV_UpdateBotWaiting(RVBot bot, int& buttons, float wish_vel[3], floa
     wish_vel = RV_ZERO_VECTOR3;
 
     float view_angles[3];
-    RV_CopyToAngles(frame.angles, view_angles);
-    RV_CopyToAngles(frame.angles, wish_angles);
+    RV_CopyAngles(frame.angles, view_angles);
+    RV_CopyAngles(frame.angles, wish_angles);
 
     buttons = frame.buttons;
 
@@ -154,7 +154,7 @@ public void RV_MoveBotToStart(RVBot bot)
     GetArrayArray(bot.stream.frames, 0, frame);
 
     float view_angles[3];
-    RV_CopyToAngles(frame.angles, view_angles);
+    RV_CopyAngles(frame.angles, view_angles);
 
     TeleportEntity(bot.id, frame.position, view_angles, RV_ZERO_VECTOR3);
 }
@@ -179,8 +179,8 @@ public void RV_UpdateBotPlaying(RVBot bot, int& buttons, float wish_vel[3], floa
     wish_vel = RV_ZERO_VECTOR3;
 
     float view_angles[3];
-    RV_CopyToAngles(frame.angles, view_angles);
-    RV_CopyToAngles(frame.angles, wish_angles);
+    RV_CopyAngles(frame.angles, view_angles);
+    RV_CopyAngles(frame.angles, wish_angles);
 
     buttons = frame.buttons;
 

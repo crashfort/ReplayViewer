@@ -42,8 +42,7 @@ enum struct RVFrame
 {
     int buttons; // See IN_ constants.
     float position[3];
-    float angles[2];
-    int reserved;
+    float angles[3];
     float velocity[3];
 }
 
