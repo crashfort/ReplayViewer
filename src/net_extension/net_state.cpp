@@ -258,9 +258,22 @@ void Net_TerminateHeader()
     Net_AppendHeader(L"\r\n");
 }
 
-NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle)
+NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle, NetAPIDesc* type_check)
 {
-    return (NetAPIResponse*)response_handle;
+    NetAPIResponse* response = (NetAPIResponse*)response_handle;
+
+    if (response)
+    {
+        if (type_check)
+        {
+            if (response->desc != type_check)
+            {
+                return NULL;
+            }
+        }
+    }
+
+    return response;
 }
 
 int32_t Net_MakeResponseHandle(NetAPIResponse* response)
@@ -380,7 +393,7 @@ cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
 
 cell_t Net_CloseHandle(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], NULL);
 
     if (response)
     {

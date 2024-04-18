@@ -55,5 +55,5 @@ void Net_AppendHeader(const wchar_t* str);
 void Net_AddHeader(const wchar_t* format, ...);
 void Net_TerminateHeader();
 
-NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle);
+NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle, NetAPIDesc* type_check);
 int32_t Net_MakeResponseHandle(NetAPIResponse* response);

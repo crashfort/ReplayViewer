@@ -122,16 +122,11 @@ void Net_FreeReplayListResponse(NetAPIResponse* response)
 // Called by the script to read the response data.
 cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
-        return 0;
-    }
-
-    if (response->desc != &NET_REPLAY_LIST_API_DESC)
-    {
-        context->ReportError("Handle type mismatch");
+        context->ReportError("Invalid handle");
         return 0;
     }
 
@@ -142,16 +137,11 @@ cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
 // Called by the script to read the response data.
 cell_t Net_ReplayListGetPlayerName(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
-        return 0;
-    }
-
-    if (response->desc != &NET_REPLAY_LIST_API_DESC)
-    {
-        context->ReportError("Handle type mismatch");
+        context->ReportError("Invalid handle");
         return 0;
     }
 
@@ -176,16 +166,11 @@ cell_t Net_ReplayListGetPlayerName(IPluginContext* context, const cell_t* params
 // Called by the script to read the response data.
 cell_t Net_ReplayListGetTime(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
-        return 0;
-    }
-
-    if (response->desc != &NET_REPLAY_LIST_API_DESC)
-    {
-        context->ReportError("Handle type mismatch");
+        context->ReportError("Invalid handle");
         return 0;
     }
 

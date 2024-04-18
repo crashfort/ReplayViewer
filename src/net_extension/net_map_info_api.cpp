@@ -107,16 +107,11 @@ void Net_FreeMapInfoResponse(NetAPIResponse* response)
 // Called by the script to read the response data.
 cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
 
     if (response == NULL)
     {
-        return 0;
-    }
-
-    if (response->desc != &NET_MAP_INFO_API_DESC)
-    {
-        context->ReportError("Handle type mismatch");
+        context->ReportError("Invalid handle");
         return 0;
     }
 
@@ -127,16 +122,11 @@ cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
 // Called by the script to read the response data.
 cell_t Net_MapInfoGetNumBonuses(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1]);
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
 
     if (response == NULL)
     {
-        return 0;
-    }
-
-    if (response->desc != &NET_MAP_INFO_API_DESC)
-    {
-        context->ReportError("Handle type mismatch");
+        context->ReportError("Invalid handle");
         return 0;
     }
 
