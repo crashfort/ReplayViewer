@@ -28,7 +28,7 @@ struct NetAPIDesc
     NetHandleAPIResponseFn handle_response_func;
 
     // Free anything previously allocated during the request and response.
-    // This gets called when the script calls Net_CloseHandle, or if the response failed.
+    // This gets called directly after handle_response_func.
     NetFreeResponseFn free_response_func;
 };
 

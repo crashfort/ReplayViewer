@@ -33,10 +33,6 @@ stock int Net_GetBonusZone(int idx)
 // Calls to other net functions can not be done if this returns false.
 native bool Net_ConnectedToInet();
 
-// Call this to free a response.
-// A response handle is given on success through the forwards below.
-native void Net_CloseHandle(int response_handle);
-
 // Get information about the current map, such as the zones.
 // The user id is optional, but can be used to identify parallel requests.
 native bool Net_DownloadMapInfo(int user_id);

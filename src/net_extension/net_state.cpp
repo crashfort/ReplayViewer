@@ -328,12 +328,6 @@ bool Net_InitInet()
     return true;
 }
 
-void Net_FreeResponse(NetAPIResponse* response)
-{
-    response->desc->free_response_func(response);
-    Net_Free(response);
-}
-
 // Used to poll completion of the network requests from the net thread.
 void Net_ReadThreadResponses()
 {
@@ -350,14 +344,7 @@ void Net_ReadThreadResponses()
 
         // Still call even if the response failed, in order to call script functions.
         response->desc->handle_response_func(response);
-
-        // Automatically free if the response failed, since there won't be any option to call Net_CloseHandle.
-        if (!response->status)
-        {
-            Net_FreeResponse(response);
-        }
-
-        // If the response worked, the script must call Net_CloseHandle to free the response.
+        response->desc->free_response_func(response); // Not needed any more.
     }
 
     net_local_responses.clear();
@@ -389,18 +376,6 @@ bool Net_ConnectedToInet()
 cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
 {
     return Net_ConnectedToInet();
-}
-
-cell_t Net_CloseHandle(IPluginContext* context, const cell_t* params)
-{
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], NULL);
-
-    if (response)
-    {
-        Net_FreeResponse(response);
-    }
-
-    return 1;
 }
 
 bool Net_Init()
@@ -482,6 +457,5 @@ void Net_Shutdown()
 
 sp_nativeinfo_t NET_NATIVES[] = {
     sp_nativeinfo_t { "Net_ConnectedToInet", Net_ConnectedToInet },
-    sp_nativeinfo_t { "Net_CloseHandle", Net_CloseHandle },
     sp_nativeinfo_t { NULL, NULL },
 };
