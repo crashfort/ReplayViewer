@@ -67,8 +67,7 @@ native bool Net_DownloadReplay(int user_id, int zone_id, int angle_type, int rep
 forward void Net_ReplayDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplay to return the response.
 forward void Net_ReplayDownloadFailed(); // Sent in response to Net_DownloadReplay if the download failed.
 native int Net_ReplayDownloadGetUserId(int response_handle); // Get the user id passed in the request.
-native bool Net_ReplayDownloadReadData(int response_handle, any[] items, int num_items, int size); // Read from the response file.
-native void Net_ReplayDownloadRewind(int response_handle); // Reset the reading position of the response file.
+native bool Net_ReplayDownloadWriteToFile(int response_handle, char[] dest); // Write the replay file to file.
 native int Net_ReplayDownloadGetZoneId(int response_handle); // Get the zone id of a replay.
 native int Net_ReplayDownloadGetAngleType(int response_handle); // Get the angle type of a replay.
 native int Net_ReplayDownloadGetIndex(int response_handle); // Get the index of a replay in the replay list.

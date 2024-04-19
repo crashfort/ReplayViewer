@@ -16,7 +16,6 @@ struct NetReplayDownloadAPIResponse
 {
     uint8_t* bytes; // File data.
     int32_t size; // Size of file.
-    int32_t read_pos; // How much the script has read.
 };
 
 // Thse are used to give data back to the script.
@@ -114,27 +113,6 @@ void Net_FreeReplayDownloadResponse(NetAPIResponse* response)
     }
 }
 
-bool Net_CanReadReplayStream(NetReplayDownloadAPIResponse* response_state, int32_t size)
-{
-    int32_t remaining_space = response_state->size - response_state->read_pos;
-    return size <= remaining_space;
-}
-
-// Read some bytes from the downloaded file.
-bool Net_ReadReplayStream(NetReplayDownloadAPIResponse* response_state, void* dest, int32_t size)
-{
-    if (!Net_CanReadReplayStream(response_state, size))
-    {
-        return false;
-    }
-
-    memcpy(dest, response_state->bytes + response_state->read_pos, size);
-
-    response_state->read_pos += size; // Advance reading position.
-
-    return true;
-}
-
 cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
@@ -149,7 +127,7 @@ cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params
     return request_state->user_id;
 }
 
-cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
+cell_t Net_ReplayDownloadWriteToFile(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
@@ -159,87 +137,21 @@ cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
         return 0;
     }
 
+    char* dest_ptr;
+    context->LocalToString(params[2], &dest_ptr);
+
     NetReplayDownloadAPIResponse* response_state = (NetReplayDownloadAPIResponse*)response->response_state;
 
-    if (response_state->read_pos == response_state->size)
+    HANDLE h = CreateFileA(dest_ptr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (h == INVALID_HANDLE_VALUE)
     {
-        return 0; // Nothing more to read.
-    }
-
-    cell_t* dest;
-    context->LocalToPhysAddr(params[2], &dest);
-
-    bool res = false;
-
-    // Hella messy because SourcePawn uses a generic cell type which is inconsistent and weird about its usage.
-    // The logic about the sizes here is from the SourceMod ReadFile function.
-
-    switch (params[4])
-    {
-        case 4:
-        {
-            res = Net_ReadReplayStream(response_state, dest, sizeof(cell_t) * params[3]);
-            break;
-        }
-
-        case 2:
-        {
-            for (cell_t i = 0; i < params[3]; i++)
-            {
-                uint16_t val;
-                res = Net_ReadReplayStream(response_state, &val, sizeof(uint16_t));
-
-                if (!res)
-                {
-                    break;
-                }
-
-                dest[i] = val;
-            }
-
-            break;
-        }
-
-        case 1:
-        {
-            for (cell_t i = 0; i < params[3]; i++)
-            {
-                uint8_t val;
-                res = Net_ReadReplayStream(response_state, &val, sizeof(uint8_t));
-
-                if (!res)
-                {
-                    break;
-                }
-
-                dest[i] = val;
-            }
-
-            break;
-        }
-
-        default:
-        {
-            context->ReportError("Invalid size specifier (%d is not 1, 2, or 4)", params[4]);
-            return 0;
-        }
-    }
-
-    return res;
-}
-
-cell_t Net_ReplayDownloadRewind(IPluginContext* context, const cell_t* params)
-{
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
-
-    if (response == NULL)
-    {
-        context->ReportError("Invalid handle");
         return 0;
     }
 
-    NetReplayDownloadAPIResponse* response_state = (NetReplayDownloadAPIResponse*)response->response_state;
-    response_state->read_pos = 0;
+    WriteFile(h, response_state->bytes, response_state->size, NULL, NULL);
+
+    CloseHandle(h);
 
     return 1;
 }
@@ -289,8 +201,7 @@ cell_t Net_ReplayDownloadGetIndex(IPluginContext* context, const cell_t* params)
 sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadReplay", Net_DownloadReplay },
     sp_nativeinfo_t { "Net_ReplayDownloadGetUserId", Net_ReplayDownloadGetUserId },
-    sp_nativeinfo_t { "Net_ReplayDownloadReadData", Net_ReplayDownloadReadData },
-    sp_nativeinfo_t { "Net_ReplayDownloadRewind", Net_ReplayDownloadRewind },
+    sp_nativeinfo_t { "Net_ReplayDownloadWriteToFile", Net_ReplayDownloadWriteToFile },
     sp_nativeinfo_t { "Net_ReplayDownloadGetZoneId", Net_ReplayDownloadGetZoneId },
     sp_nativeinfo_t { "Net_ReplayDownloadGetAngleType", Net_ReplayDownloadGetAngleType },
     sp_nativeinfo_t { "Net_ReplayDownloadGetIndex", Net_ReplayDownloadGetIndex },
