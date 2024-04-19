@@ -6,6 +6,7 @@ extern NetAPIDesc NET_REPLAY_DOWNLOAD_API_DESC;
 
 struct NetReplayDownloadAPIRequest
 {
+    int32_t user_id;
     int32_t zone_id;
     int32_t angle_type;
     int32_t index;
@@ -49,9 +50,10 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
     const char* map = gamehelpers->GetCurrentMap();
 
     NetReplayDownloadAPIRequest* request_state = NET_ZALLOC(NetReplayDownloadAPIRequest);
-    request_state->zone_id = params[1];
-    request_state->angle_type = params[2];
-    request_state->index = params[3];
+    request_state->user_id = params[1];
+    request_state->zone_id = params[2];
+    request_state->angle_type = params[3];
+    request_state->index = params[4];
 
     // TODO Don't know the input path.
     wchar_t req_string[128];
@@ -133,8 +135,21 @@ bool Net_ReadReplayStream(NetReplayDownloadAPIResponse* response_state, void* de
     return true;
 }
 
-// Called by the script to read the response data.
 cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
+    return request_state->user_id;
+}
+
+cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
@@ -229,10 +244,56 @@ cell_t Net_ReplayDownloadRewind(IPluginContext* context, const cell_t* params)
     return 1;
 }
 
+cell_t Net_ReplayDownloadGetZoneId(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
+    return request_state->zone_id;
+}
+
+cell_t Net_ReplayDownloadGetAngleType(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
+    return request_state->angle_type;
+}
+
+cell_t Net_ReplayDownloadGetIndex(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
+    return request_state->index;
+}
+
 sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadReplay", Net_DownloadReplay },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetUserId", Net_ReplayDownloadGetUserId },
     sp_nativeinfo_t { "Net_ReplayDownloadReadData", Net_ReplayDownloadReadData },
     sp_nativeinfo_t { "Net_ReplayDownloadRewind", Net_ReplayDownloadRewind },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetZoneId", Net_ReplayDownloadGetZoneId },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetAngleType", Net_ReplayDownloadGetAngleType },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetIndex", Net_ReplayDownloadGetIndex },
     sp_nativeinfo_t { NULL, NULL },
 };
 

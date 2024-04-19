@@ -28,7 +28,7 @@ public Action RV_PrintStreamCmd(int client, int args)
 
     RVStream stream;
 
-    if (!RV_LoadFrameStream(path, stream))
+    if (!RV_LoadFileStream(path, stream))
     {
         return Plugin_Handled;
     }
@@ -102,7 +102,7 @@ public Action RV_LoadAllReplaysCmd(int client, int args)
 {
     if (rv_sys_state == RV_SYS_IDLE)
     {
-        RV_AddAllReplaysForMap(client);
+        RV_AddAllFileReplaysForMap();
     }
 
     return Plugin_Handled;

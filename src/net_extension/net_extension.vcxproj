@@ -65,14 +65,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(SolutionDir)build\$(TargetName)-$(PlatformTarget)-$(Configuration)\</IntDir>
-    <TargetName>replay_viewer_net</TargetName>
+    <TargetName>replay_viewer_net.ext</TargetName>
     <ExcludePath>$(VcpkgRoot);$(ExcludePath)</ExcludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(SolutionDir)build\$(TargetName)-$(PlatformTarget)-$(Configuration)\</IntDir>
-    <TargetName>replay_viewer_net</TargetName>
+    <TargetName>replay_viewer_net.ext</TargetName>
     <ExcludePath>$(VcpkgRoot);$(ExcludePath)</ExcludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -24,6 +24,13 @@ public RVMenuId RV_GetMenuItemId(Menu menu, int idx)
     return view_as<RVMenuId>(id);
 }
 
+public void RV_ExtractMenuItemTokens(Menu menu, int item, char[][] dest, int num_tokens, int token_size)
+{
+    char info[256];
+    GetMenuItem(menu, item, info, sizeof(info));
+    ExplodeString(info, ";", dest, num_tokens, token_size);
+}
+
 public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int param2)
 {
     if (action == MenuAction_Select)
@@ -35,7 +42,7 @@ public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int
         {
             case RV_MENU_ADD_ALL_REPLAYS_FOR_MAP:
             {
-                RV_AddAllReplaysForMap(client);
+                RV_AddAllFileReplaysForMap();
                 RV_OpenInterfaceMenu(client);
             }
         }
@@ -155,4 +162,186 @@ public void RV_OpenInterfaceMenu(int client)
     }
 
     DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public int RV_HandleWaitMenu(Menu menu, MenuAction action, int param1, int param2)
+{
+    return 0;
+}
+
+public void RV_CreateWaitMenu()
+{
+    rv_wait_menu = CreateMenu(RV_HandleWaitMenu);
+    SetMenuTitle(rv_wait_menu, "Loading");
+}
+
+// Called on map start.
+public void RV_StartMenus()
+{
+    RV_CreateWaitMenu();
+
+    // Download map info immediately.
+    // This will call into Net_MapInfoDownloadReceived or Net_MapInfoDownloadFailed in rv_net_callbacks.inc.
+    Net_DownloadMapInfo();
+}
+
+// Called on map end.
+public void RV_StopMenus()
+{
+    for (int i = 0; i < NET_ZONES_MAX; i++)
+    {
+        delete rv_zone_menus[i];
+    }
+
+    delete rv_zone_list_menu;
+    delete rv_wait_menu;
+}
+
+public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int param2)
+{
+    // User has selected a zone to view the replays for, such as stage 6.
+    if (action == MenuAction_Select)
+    {
+        char tokens[2][32];
+        RV_ExtractMenuItemTokens(menu, param2, tokens, sizeof(tokens), sizeof(tokens[]));
+
+        int angle_type = StringToInt(tokens[0]);
+        int zone_id = StringToInt(tokens[1]);
+
+        // Download the replay list if we have to.
+        // This will call into Net_ReplayListDownloadReceived or Net_ReplayListDownloadFailed in rv_net_callbacks.inc.
+        if (rv_zone_menus[zone_id] == null)
+        {
+            DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
+            Net_DownloadReplayList(param1, zone_id, angle_type);
+        }
+
+        else
+        {
+            DisplayMenu(rv_zone_menus[zone_id], param1, MENU_TIME_FOREVER);
+        }
+    }
+
+    else if (action == MenuAction_Cancel)
+    {
+    }
+
+    else if (action == MenuAction_End)
+    {
+    }
+
+    return 0;
+}
+
+// Build the zone list menu now when we have the number of stages and bonuses.
+public void RV_CreateZoneListMenu(int response_handle)
+{
+    int num_stages = Net_MapInfoGetNumStages(response_handle);
+    int num_bonuses = Net_MapInfoGetNumBonuses(response_handle);
+
+    rv_zone_list_menu = CreateMenu(RV_HandleSelectZoneMenu);
+    SetMenuTitle(rv_zone_list_menu, "Select zone");
+
+    char display[64];
+    char info[RV_REPLAY_ID_SIZE];
+
+    // Only forward angle type for now because this is hella messy already.
+
+    Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, NET_ZONE_MAP);
+    AddMenuItem(rv_zone_list_menu, info, "Map");
+
+    for (int i = 0; i < num_stages; i++)
+    {
+        int zone_id = Net_GetStageZone(i);
+
+        Format(display, sizeof(display), "Stage %d", i + 1);
+        Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, zone_id);
+
+        AddMenuItem(rv_zone_list_menu, info, display);
+    }
+
+    for (int i = 0; i < num_bonuses; i++)
+    {
+        int zone_id = Net_GetBonusZone(i);
+
+        Format(display, sizeof(display), "Bonus %d", i + 1);
+        Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, zone_id);
+
+        AddMenuItem(rv_zone_list_menu, info, display);
+    }
+}
+
+public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, int param2)
+{
+    // User has selected a replay within a zone.
+    if (action == MenuAction_Select)
+    {
+        char tokens[3][32];
+        RV_ExtractMenuItemTokens(menu, param2, tokens, sizeof(tokens), sizeof(tokens[]));
+
+        int angle_type = StringToInt(tokens[0]);
+        int zone_id = StringToInt(tokens[1]);
+        int replay_idx = StringToInt(tokens[2]);
+
+        char stream_id_buf[RV_REPLAY_ID_SIZE];
+        Format(stream_id_buf, sizeof(stream_id_buf), "%d;%d;%d", angle_type, zone_id, replay_idx);
+
+        int stream_idx = FindStringInArray(rv_zone_stream_ids, stream_id_buf);
+
+        // Download the replay if we have to.
+        // This will call into Net_ReplayDownloadReceived or Net_ReplayDownloadFailed in rv_net_callbacks.inc.
+        if (stream_idx == -1)
+        {
+            DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
+            Net_DownloadReplay(param1, zone_id, angle_type, replay_idx);
+        }
+
+        else
+        {
+            // TODO Need to start playing the existing stream.
+        }
+    }
+
+    else if (action == MenuAction_Cancel)
+    {
+    }
+
+    else if (action == MenuAction_End)
+    {
+    }
+
+    return 0;
+}
+
+// Build the replay selection menu for a given zone.
+public void RV_CreateNewReplayListMenu(int response_handle)
+{
+    int user_id = Net_ReplayListGetUserId(response_handle);
+    int angle_type = Net_ReplayListGetAngleType(response_handle);
+    int zone_id = Net_ReplayListGetZoneId(response_handle);
+    int num_replays = Net_ReplayListGetNum(response_handle);
+
+    Menu new_menu = CreateMenu(RV_HandleSelectReplayMenu);
+
+    char display[256];
+    char info[RV_REPLAY_ID_SIZE];
+    char time_display[32];
+    char name_display[128];
+
+    for (int i = 0; i < num_replays; i++)
+    {
+        Net_ReplayListGetPlayerName(response_handle, i, name_display, sizeof(name_display));
+        int time = Net_ReplayListGetTime(response_handle, i);
+
+        Format(time_display, sizeof(time_display), "%d", time); // TODO Don't know what unit we are getting from the server.
+        Format(display, sizeof(display), "%s - %s", time_display, name_display);
+        Format(info, sizeof(info), "%d;%d;%d", angle_type, zone_id, i);
+
+        AddMenuItem(new_menu, info, display);
+    }
+
+    rv_zone_menus[zone_id] = new_menu;
+
+    // Stop the waiting menu and open the expected menu.
+    DisplayMenu(new_menu, user_id, MENU_TIME_FOREVER);
 }

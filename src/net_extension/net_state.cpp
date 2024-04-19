@@ -3,7 +3,7 @@
 // Quick and dirty code to retrieve server information for the replay viewer.
 // If this would ever grow to do more stuff then put in proper structure.
 
-const wchar_t* NET_HOST = L""; // TODO Need a host.
+const wchar_t* NET_HOST = L"google.com"; // TODO Need a host.
 
 // Headers to send with a request.
 // Only used by the net thread.
@@ -408,7 +408,7 @@ void Net_AllLoaded()
 
     for (size_t i = 0; i < NET_NUM_API_DESCS; i++)
     {
-        NetAPIDesc* desc = &NET_API_DESCS[i];
+        NetAPIDesc* desc = NET_API_DESCS[i];
         desc->init_func();
     }
 }
@@ -419,7 +419,7 @@ void Net_Shutdown()
 
     for (size_t i = 0; i < NET_NUM_API_DESCS; i++)
     {
-        NetAPIDesc* desc = &NET_API_DESCS[i];
+        NetAPIDesc* desc = NET_API_DESCS[i];
         desc->free_func();
     }
 

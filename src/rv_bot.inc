@@ -267,7 +267,7 @@ public bool RV_CanSpawnMoreBots()
     return RV_GetFreeBotIdx() != -1;
 }
 
-public bool RV_SpawnBotWithStream(char[] path)
+public bool RV_SpawnBotWithStream(RVStream stream, char[] name)
 {
     int idx = RV_GetFreeBotIdx();
 
@@ -277,24 +277,7 @@ public bool RV_SpawnBotWithStream(char[] path)
         return false;
     }
 
-    RVStream stream;
-
-    if (!RV_LoadFrameStream(path, stream))
-    {
-        return false;
-    }
-
-    char path_copy[PLATFORM_MAX_PATH];
-    strcopy(path_copy, sizeof(path_copy), path);
-
-    ReplaceString(path_copy, sizeof(path_copy), ".rec", "");
-
-    int name_idx = FindCharInString(path_copy, '/', true) + 1;
-
-    char bot_name[128];
-    strcopy(bot_name, sizeof(bot_name), path_copy[name_idx]);
-
-    RV_SpawnBot(rv_bots[idx], bot_name, stream.team);
+    RV_SpawnBot(rv_bots[idx], name, stream.team);
     RV_SetBotStream(rv_bots[idx], stream); // Transfer stream.
 
     RV_FreeStream(stream);

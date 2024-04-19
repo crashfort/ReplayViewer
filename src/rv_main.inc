@@ -35,10 +35,14 @@ public void RV_MapStart()
 
     RV_StartMapCmds();
     RV_StartMapBots();
+    RV_StartMenus();
+    RV_StartLoad();
 }
 
 public void RV_MapEnd()
 {
+    RV_StopMenus();
+    RV_StopLoad();
 }
 
 public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float wishangles[3])

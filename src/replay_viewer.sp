@@ -12,6 +12,7 @@
 
 #include "rv_engine.inc"
 #include "rv_util.inc"
+#include "rv_net.inc"
 #include "rv_priv.inc"
 #include "rv_cmds.inc"
 #include "rv_menu.inc"
@@ -20,7 +21,7 @@
 #include "rv_load.inc"
 #include "rv_player.inc"
 #include "rv_round.inc"
-#include "rv_net.inc"
+#include "rv_net_callbacks.inc"
 
 // Main interface from SourceMod.
 

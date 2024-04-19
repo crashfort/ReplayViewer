@@ -5,7 +5,7 @@
 
 #define RV_MAGIC 0x02 // Identifier or version.
 
-bool RV_LoadFrameStream(char[] path, RVStream stream)
+bool RV_LoadFileStream(char[] path, RVStream stream)
 {
     File file = OpenFile(path, "rb");
 
@@ -92,14 +92,14 @@ bool RV_LoadFrameStream(char[] path, RVStream stream)
 
 // Instead of managing a huge list with many pages of hard to read names,
 // let the file management be done in the file explorer and just add everything in there.
-public void RV_AddAllReplaysForMap(int client)
+public void RV_AddAllFileReplaysForMap()
 {
     char dir_path[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, rv_cur_map);
 
     if (!DirExists(dir_path))
     {
-        PrintToChat(client, "No replays exist for map %s", rv_cur_map);
+        PrintToChatAll("No replays exist for map %s", rv_cur_map);
         return;
     }
 
@@ -107,7 +107,7 @@ public void RV_AddAllReplaysForMap(int client)
 
     if (dir_lister == null)
     {
-        PrintToChat(client, "Could not open directory for map %s", rv_cur_map);
+        PrintToChatAll("Could not open directory for map %s", rv_cur_map);
         return;
     }
 
@@ -131,7 +131,16 @@ public void RV_AddAllReplaysForMap(int client)
 
         FormatEx(full_path, sizeof(full_path), "%s/%s", dir_path, file_name);
 
-        RV_SpawnBotWithStream(full_path);
+        RVStream stream;
+
+        if (!RV_LoadFileStream(full_path, stream))
+        {
+            continue;
+        }
+
+        // For files, we do not have any way to get the player name.
+        // Use the file name and let the user make good names.
+        RV_SpawnBotWithStream(stream, file_name);
 
         index++;
     }
@@ -140,7 +149,7 @@ public void RV_AddAllReplaysForMap(int client)
 
     if (index == 0)
     {
-        PrintToChat(client, "No replays available for %s", rv_cur_map);
+        PrintToChatAll("No replays available for %s", rv_cur_map);
         return;
     }
 
@@ -167,4 +176,69 @@ public void RV_DupeStream(RVStream source, RVStream dest)
     dest = source;
     dest.bookmarks = RV_CloneArrayHandle(source.bookmarks);
     dest.frames = RV_CloneArrayHandle(source.frames);
+}
+
+// Called on map start.
+public void RV_StartLoad()
+{
+    char stupid[RV_REPLAY_ID_SIZE];
+
+    rv_replay_listing_ids = CreateArray(sizeof(stupid));
+    rv_replay_listings = CreateArray(sizeof(RVReplayListing));
+    rv_zone_stream_ids = CreateArray(sizeof(stupid));
+    rv_zone_streams = CreateArray(sizeof(RVStream));
+}
+
+// Called on map end.
+public void RV_StopLoad()
+{
+    delete rv_replay_listing_ids;
+    delete rv_replay_listings;
+    delete rv_zone_stream_ids;
+    delete rv_zone_streams;
+}
+
+// Store data from the replay listing.
+public void RV_ProcessDownloadedListing(int response_handle)
+{
+    int angle_type = Net_ReplayListGetAngleType(response_handle);
+    int zone_id = Net_ReplayListGetZoneId(response_handle);
+    int num_replays = Net_ReplayListGetNum(response_handle);
+
+    char listing_id[RV_REPLAY_ID_SIZE];
+
+    for (int i = 0; i < num_replays; i++)
+    {
+        RVReplayListing listing;
+        listing.time = Net_ReplayListGetTime(response_handle, i);
+        listing.angle_type = angle_type;
+        listing.zone_id = zone_id;
+        listing.idx = i;
+
+        Net_ReplayListGetPlayerName(response_handle, i, listing.name, sizeof(listing.name));
+
+        Format(listing_id, sizeof(listing_id), "%d;%d;%d", angle_type, zone_id, i);
+
+        PushArrayString(rv_replay_listing_ids, listing_id);
+        PushArrayArray(rv_replay_listings, listing);
+    }
+}
+
+// A replay selected in the zone menu has been downloaded. Load the stream.
+public void RV_ProcessDownloadedReplay(int response_handle)
+{
+    int zone_id = Net_ReplayDownloadGetZoneId(response_handle);
+    int angle_type = Net_ReplayDownloadGetAngleType(response_handle);
+    int replay_idx = Net_ReplayDownloadGetIndex(response_handle);
+
+    char stream_id[RV_REPLAY_ID_SIZE];
+    Format(stream_id, sizeof(stream_id), "%d;%d;%d", angle_type, zone_id, replay_idx);
+
+    // TODO Need to create a stream here using Net_ReplayDownloadReadData, or probably just save to file and use RV_LoadFileStream.
+
+#if 0
+    int listing_idx = FindStringInArray(rv_replay_listing_ids, stream_id);
+
+    PushArrayString(rv_zone_stream_ids, stream_id);
+#endif
 }

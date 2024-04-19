@@ -6,6 +6,7 @@ extern NetAPIDesc NET_REPLAY_LIST_API_DESC;
 
 struct NetReplayListAPIRequest
 {
+    int32_t user_id;
     int32_t zone_id;
     int32_t angle_type;
 };
@@ -53,8 +54,9 @@ cell_t Net_DownloadReplayList(IPluginContext* context, const cell_t* params)
     const char* map = gamehelpers->GetCurrentMap();
 
     NetReplayListAPIRequest* request_state = NET_ZALLOC(NetReplayListAPIRequest);
-    request_state->zone_id = params[1];
-    request_state->angle_type = params[2];
+    request_state->user_id = params[1];
+    request_state->zone_id = params[2];
+    request_state->angle_type = params[3];
 
     // TODO Don't know the input path.
     wchar_t req_string[128];
@@ -115,7 +117,20 @@ void Net_FreeReplayListResponse(NetAPIResponse* response)
     }
 }
 
-// Called by the script to read the response data.
+cell_t Net_ReplayListGetUserId(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayListAPIRequest* request_state = (NetReplayListAPIRequest*)response->request_state;
+    return request_state->user_id;
+}
+
 cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
@@ -130,7 +145,6 @@ cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
     return response_state->num_listings;
 }
 
-// Called by the script to read the response data.
 cell_t Net_ReplayListGetPlayerName(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
@@ -159,7 +173,6 @@ cell_t Net_ReplayListGetPlayerName(IPluginContext* context, const cell_t* params
     return 1;
 }
 
-// Called by the script to read the response data.
 cell_t Net_ReplayListGetTime(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
@@ -182,11 +195,42 @@ cell_t Net_ReplayListGetTime(IPluginContext* context, const cell_t* params)
     return listing->time;
 }
 
+cell_t Net_ReplayListGetZoneId(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayListAPIRequest* request_state = (NetReplayListAPIRequest*)response->request_state;
+    return request_state->zone_id;
+}
+
+cell_t Net_ReplayListGetAngleType(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayListAPIRequest* request_state = (NetReplayListAPIRequest*)response->request_state;
+    return request_state->angle_type;
+}
+
 sp_nativeinfo_t NET_REPLAY_LIST_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadReplayList", Net_DownloadReplayList },
+    sp_nativeinfo_t { "Net_ReplayListGetUserId", Net_ReplayListGetUserId },
     sp_nativeinfo_t { "Net_ReplayListGetNum", Net_ReplayListGetNum },
     sp_nativeinfo_t { "Net_ReplayListGetPlayerName", Net_ReplayListGetPlayerName },
     sp_nativeinfo_t { "Net_ReplayListGetTime", Net_ReplayListGetTime },
+    sp_nativeinfo_t { "Net_ReplayListGetZoneId", Net_ReplayListGetZoneId },
+    sp_nativeinfo_t { "Net_ReplayListGetAngleType", Net_ReplayListGetAngleType },
     sp_nativeinfo_t { NULL, NULL },
 };
 
