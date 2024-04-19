@@ -107,7 +107,7 @@ enum struct RVReplayListing
 {
     char name[MAX_NAME_LENGTH]; // Player name.
     int time; // In frames. Use RV_FramesToTime to get milliseconds.
-    int angle_type; // Forwards or sideways etc.
+    int angle_type; // Forwards or sideways etc, see NET_ANGLE_TYPE constants.
     int zone_id; // Zone identifier, see NET_ZONE constants.
     int idx; // Replay index in zone listing.
 }
