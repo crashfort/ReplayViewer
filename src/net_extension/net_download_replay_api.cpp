@@ -135,7 +135,7 @@ bool Net_ReadReplayStream(NetReplayDownloadAPIResponse* response_state, void* de
     return true;
 }
 
-cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
+cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
@@ -149,7 +149,7 @@ cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
     return request_state->user_id;
 }
 
-cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params)
+cell_t Net_ReplayDownloadReadData(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
