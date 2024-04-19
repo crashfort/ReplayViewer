@@ -7,10 +7,6 @@
 
 #define RV_ROOT_PATH "data/replay_viewer"
 
-// Prefix of files we want to load.
-// This is not a restriction, but means the name has additional information we can load.
-#define RV_FILE_PREFIX "replay_css_"
-
 // Size of the key used to identify a replay, in chars.
 #define RV_REPLAY_ID_SIZE 32
 

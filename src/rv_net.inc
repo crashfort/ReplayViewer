@@ -39,8 +39,10 @@ native bool Net_ConnectedToInet();
 
 // Get information about the current map, such as the zones.
 native bool Net_DownloadMapInfo();
+
 forward void Net_MapInfoDownloadReceived(int response_handle); // Sent in response to Net_DownloadMapInfo to return the response.
 forward void Net_MapInfoDownloadFailed(); // Sent in response to Net_DownloadMapInfo if the download failed.
+
 native int Net_MapInfoGetNumStages(int response_handle); // Get number of stages.
 native int Net_MapInfoGetNumBonuses(int response_handle); // Get number of bonuses.
 
@@ -49,8 +51,10 @@ native int Net_MapInfoGetNumBonuses(int response_handle); // Get number of bonus
 // See NET_ANGLE_TYPE constants for angled leaderboards.
 // The user id is optional, but can be used to identify requests in the response handler.
 native bool Net_DownloadReplayList(int user_id, int zone_id, int angle_type);
+
 forward void Net_ReplayListDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplayList to return the response.
 forward void Net_ReplayListDownloadFailed(); // Sent in response to Net_DownloadReplayList if the download failed.
+
 native int Net_ReplayListGetUserId(int response_handle); // Get the user id passed in the request.
 native int Net_ReplayListGetNum(int response_handle); // Get how many replays there are.
 native void Net_ReplayListGetPlayerName(int response_handle, int idx, char[] dest, int dest_size); // Get the player name of a replay.
@@ -64,8 +68,10 @@ native int Net_ReplayListGetAngleType(int response_handle); // Get the angle typ
 // This will send Net_ReplayDownloadReceived or Net_ReplayDownloadFailed some time in the future when the network call is complete.
 // The user id is optional, but can be used to identify requests in the response handler.
 native bool Net_DownloadReplay(int user_id, int zone_id, int angle_type, int replay_idx);
+
 forward void Net_ReplayDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplay to return the response.
 forward void Net_ReplayDownloadFailed(); // Sent in response to Net_DownloadReplay if the download failed.
+
 native int Net_ReplayDownloadGetUserId(int response_handle); // Get the user id passed in the request.
 native bool Net_ReplayDownloadWriteToFile(int response_handle, char[] dest); // Write the replay file to file.
 native int Net_ReplayDownloadGetZoneId(int response_handle); // Get the zone id of a replay.
