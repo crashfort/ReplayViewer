@@ -131,11 +131,11 @@ ArrayList rv_replay_listings; // Array of RVReplayListing.
 
 // Menu for showing what zones exist in the map.
 // This is created once after map start.
-Handle rv_zone_list_menu;
+Menu rv_zone_list_menu;
 
 // Menu for showing wait during async operation.
-Handle rv_wait_menu;
+Menu rv_wait_menu;
 
 // Menus for replay selection in a zone.
 // These are created on demand and reused, meaning that new requests are not made for existing ones.
-Handle rv_zone_menus[NET_ZONES_MAX];
+Menu rv_zone_menus[NET_ZONES_MAX];
