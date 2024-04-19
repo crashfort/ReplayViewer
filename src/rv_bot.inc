@@ -86,8 +86,8 @@ public void RV_SpawnBot(RVBot bot, char[] name, int team)
 public void RV_StopBot(RVBot bot)
 {
     ChangeClientTeam(bot.id, CS_TEAM_SPECTATOR);
-
     SetClientName(bot.id, "crashfort/ReplayViewer");
+    RV_FreeStream(bot.stream);
 
     bot.state = RV_BOT_IDLE;
 }
@@ -279,7 +279,6 @@ public bool RV_SpawnBotWithStream(RVStream stream, char[] name)
 
     RV_SpawnBot(rv_bots[idx], name, stream.team);
     RV_SetBotStream(rv_bots[idx], stream); // Transfer stream.
-
     RV_FreeStream(stream);
 
     return true;

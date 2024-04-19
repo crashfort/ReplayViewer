@@ -283,14 +283,15 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
         int zone_id = StringToInt(tokens[1]);
         int replay_idx = StringToInt(tokens[2]);
 
-        char stream_id_buf[RV_REPLAY_ID_SIZE];
-        Format(stream_id_buf, sizeof(stream_id_buf), "%d;%d;%d", angle_type, zone_id, replay_idx);
+        char stream_id[RV_REPLAY_ID_SIZE];
+        RV_MakeReplayIdentifier(angle_type, zone_id, replay_idx, stream_id, sizeof(stream_id));
 
-        int stream_idx = FindStringInArray(rv_zone_stream_ids, stream_id_buf);
+        char load_path[PLATFORM_MAX_PATH];
+        RV_GetReplayFilePath(stream_id, load_path, sizeof(load_path));
 
         // Download the replay if we have to.
         // This will call into Net_ReplayDownloadReceived or Net_ReplayDownloadFailed in rv_net_callbacks.inc.
-        if (stream_idx == -1)
+        if (!FileExists(load_path))
         {
             DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
             Net_DownloadReplay(param1, zone_id, angle_type, replay_idx);
@@ -298,7 +299,7 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
 
         else
         {
-            // TODO Need to start playing the existing stream.
+            RV_LoadStreamSpawnBot(stream_id);
         }
     }
 
@@ -326,7 +327,7 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     char display[256];
     char info[RV_REPLAY_ID_SIZE];
     char time_display[32];
-    char name_display[128];
+    char name_display[MAX_NAME_LENGTH];
 
     for (int i = 0; i < num_replays; i++)
     {
@@ -335,7 +336,8 @@ public void RV_CreateNewReplayListMenu(int response_handle)
 
         Format(time_display, sizeof(time_display), "%d", time); // TODO Don't know what unit we are getting from the server.
         Format(display, sizeof(display), "%s - %s", time_display, name_display);
-        Format(info, sizeof(info), "%d;%d;%d", angle_type, zone_id, i);
+
+        RV_MakeReplayIdentifier(angle_type, zone_id, i, info, sizeof(info));
 
         AddMenuItem(new_menu, info, display);
     }

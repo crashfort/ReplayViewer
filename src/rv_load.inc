@@ -185,8 +185,6 @@ public void RV_StartLoad()
 
     rv_replay_listing_ids = CreateArray(sizeof(stupid));
     rv_replay_listings = CreateArray(sizeof(RVReplayListing));
-    rv_zone_stream_ids = CreateArray(sizeof(stupid));
-    rv_zone_streams = CreateArray(sizeof(RVStream));
 }
 
 // Called on map end.
@@ -194,8 +192,6 @@ public void RV_StopLoad()
 {
     delete rv_replay_listing_ids;
     delete rv_replay_listings;
-    delete rv_zone_stream_ids;
-    delete rv_zone_streams;
 }
 
 // Store data from the replay listing.
@@ -217,14 +213,54 @@ public void RV_ProcessDownloadedListing(int response_handle)
 
         Net_ReplayListGetPlayerName(response_handle, i, listing.name, sizeof(listing.name));
 
-        Format(listing_id, sizeof(listing_id), "%d;%d;%d", angle_type, zone_id, i);
+        RV_MakeReplayIdentifier(angle_type, zone_id, i, listing_id, sizeof(listing_id));
 
         PushArrayString(rv_replay_listing_ids, listing_id);
         PushArrayArray(rv_replay_listings, listing);
     }
 }
 
-// A replay selected in the zone menu has been downloaded. Load the stream.
+public void RV_GetReplayFilePath(char[] stream_id, char[] dest, int dest_size)
+{
+    BuildPath(Path_SM, dest, dest_size, "%s/replays/%s/%s.rec", RV_ROOT_PATH, rv_cur_map, stream_id);
+}
+
+// Load a downloaded replay and spawn a bot with that stream.
+public bool RV_LoadStreamSpawnBot(char[] stream_id)
+{
+    char load_path[PLATFORM_MAX_PATH];
+    RV_GetReplayFilePath(stream_id, load_path, sizeof(load_path));
+
+    if (!FileExists(load_path))
+    {
+        return false;
+    }
+
+    RVStream stream;
+
+    if (!RV_LoadFileStream(load_path, stream))
+    {
+        return false;
+    }
+
+    int listing_idx = FindStringInArray(rv_replay_listing_ids, stream_id);
+
+    if (listing_idx != -1)
+    {
+        // This function is only to be used when downloading replays, in which case the listings must exist.
+        // The offline file loadings above do not care about the listings.
+        return false;
+    }
+
+    RVReplayListing listing;
+    GetArrayArray(rv_replay_listings, listing_idx, listing);
+
+    bool res = RV_SpawnBotWithStream(stream, listing.name);
+    return res;
+}
+
+// A replay selected in the zone menu has been downloaded.
+// This saves the replay to file for future cache, and then loads that file and spawns a bot with that stream.
 public void RV_ProcessDownloadedReplay(int response_handle)
 {
     int zone_id = Net_ReplayDownloadGetZoneId(response_handle);
@@ -232,13 +268,24 @@ public void RV_ProcessDownloadedReplay(int response_handle)
     int replay_idx = Net_ReplayDownloadGetIndex(response_handle);
 
     char stream_id[RV_REPLAY_ID_SIZE];
-    Format(stream_id, sizeof(stream_id), "%d;%d;%d", angle_type, zone_id, replay_idx);
+    RV_MakeReplayIdentifier(angle_type, zone_id, replay_idx, stream_id, sizeof(stream_id));
 
-    // TODO Need to create a stream here using Net_ReplayDownloadReadData, or probably just save to file and use RV_LoadFileStream.
+    // Save the stream to file and then load that.
+    // This makes it a lot easier because the code for loading a file already exists.
+    // Reading from memory is just super annoying to do in SourcePawn, and it would be stupid
+    // to have duplicate code for reading the same format from different mediums.
 
-#if 0
-    int listing_idx = FindStringInArray(rv_replay_listing_ids, stream_id);
+    char save_path[PLATFORM_MAX_PATH];
+    RV_GetReplayFilePath(stream_id, save_path, sizeof(save_path));
 
-    PushArrayString(rv_zone_stream_ids, stream_id);
-#endif
+    Net_ReplayDownloadWriteToFile(response_handle, save_path);
+
+    RV_LoadStreamSpawnBot(stream_id);
+}
+
+// Use this to create a replay identifier.
+// The replay identifier should be treated as opaque, and not be read or written manually.
+public void RV_MakeReplayIdentifier(int angle_type, int zone_id, int replay_idx, char[] dest, int dest_size)
+{
+    Format(dest, dest_size, "%d;%d;%d", angle_type, zone_id, replay_idx);
 }
