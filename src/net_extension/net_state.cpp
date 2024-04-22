@@ -100,6 +100,12 @@ HINTERNET Net_SendHttpRequest(NetAPIRequest* request)
     {
         Net_ClearHeaders();
         Net_AddHeader(L"Authorization: Bearer %s", net_auth_token);
+
+        if (request->desc->add_headers_func)
+        {
+            request->desc->add_headers_func(request);
+        }
+
         Net_TerminateHeader();
 
         if (!HttpSendRequestW(req_h, net_headers, -1, NULL, 0))

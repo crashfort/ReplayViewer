@@ -214,4 +214,5 @@ NetAPIDesc NET_REPLAY_DOWNLOAD_API_DESC = NetAPIDesc {
     Net_FormatReplayDownloadResponse,
     Net_HandleReplayDownloadResponse,
     Net_FreeReplayDownloadResponse,
+    NULL,
 };

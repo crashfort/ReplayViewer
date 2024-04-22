@@ -130,4 +130,5 @@ NetAPIDesc NET_MAP_INFO_API_DESC = NetAPIDesc {
     Net_FormatMapInfoResponse,
     Net_HandleMapInfoResponse,
     Net_FreeMapInfoResponse,
+    NULL,
 };

@@ -3,33 +3,31 @@
 struct NetAPIRequest;
 struct NetAPIResponse;
 
-using NetInitAPIFn = void(*)();
-using NetFreeAPIFn = void(*)();
-using NetFormatAPIResponseFn = void*(*)(void* input, int32_t input_size, NetAPIRequest* request);
-using NetHandleAPIResponseFn = void(*)(NetAPIResponse* response);
-using NetFreeResponseFn = void(*)(NetAPIResponse* response);
-
 struct NetAPIDesc
 {
     // Called during Net_AllLoaded to create script natives and forwards.
-    NetInitAPIFn init_func;
+    void(*init_func)();
 
     // Called during Net_Shutdown to remove stuff, such as natives and forwards.
-    NetFreeAPIFn free_func;
+    void(*free_func)();
 
     // Allocate and return your response structure from the input bytes received.
     // Return NULL if the data is not what you expect.
     // Called in the net thread.
-    NetFormatAPIResponseFn format_response_func;
+    void*(*format_response_func)(void* input, int32_t input_size, NetAPIRequest* request);
 
     // Process the response, such as calling a script forward.
     // If the response worked, you can create a response handle through Net_MakeResponseHandle and pass that to the script.
     // You must not call Net_MakeResponseHandle or pass anything about the response to the script if the response failed.
-    NetHandleAPIResponseFn handle_response_func;
+    void(*handle_response_func)(NetAPIResponse* response);
 
     // Free anything previously allocated during the request and response.
     // This gets called directly after handle_response_func.
-    NetFreeResponseFn free_response_func;
+    void(*free_response_func)(NetAPIResponse* response);
+
+    // Optional function where you can add new headers in the http request.
+    // Called in the net thread.
+    void(*add_headers_func)(NetAPIRequest* request);
 };
 
 struct NetAPIRequest

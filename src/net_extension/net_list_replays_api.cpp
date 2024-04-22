@@ -240,4 +240,5 @@ NetAPIDesc NET_REPLAY_LIST_API_DESC = NetAPIDesc {
     Net_FormatReplayListResponse,
     Net_HandleReplayListResponse,
     Net_FreeReplayListResponse,
+    NULL,
 };
