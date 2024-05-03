@@ -223,6 +223,7 @@ public void RV_ProcessDownloadedListing(int response_handle)
 public void RV_GetReplayFilePath(char[] stream_id, char[] dest, int dest_size)
 {
     BuildPath(Path_SM, dest, dest_size, "%s/replays/%s/%s.rec", RV_ROOT_PATH, rv_cur_map, stream_id);
+    ReplaceString(dest, dest_size, ";", "_", true);
 }
 
 // Load a downloaded replay and spawn a bot with that stream.
@@ -275,12 +276,21 @@ public void RV_ProcessDownloadedReplay(int response_handle)
     // Reading from memory is just super annoying to do in SourcePawn, and it would be stupid
     // to have duplicate code for reading the same format from different mediums.
 
+    // Maybe create new directory for this map.
+
+    char dir_path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, rv_cur_map);
+    RV_MaybeCreateDir(dir_path);
+
     char save_path[PLATFORM_MAX_PATH];
     RV_GetReplayFilePath(stream_id, save_path, sizeof(save_path));
 
     Net_ReplayDownloadWriteToFile(response_handle, save_path);
 
-    RV_LoadStreamSpawnBot(stream_id);
+    PrintToChatAll("Downloaded %s", save_path);
+
+    // TODO Enable when server have the needed routes.
+    // RV_LoadStreamSpawnBot(stream_id);
 }
 
 // Use this to create a replay identifier.

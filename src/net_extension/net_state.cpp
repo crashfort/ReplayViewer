@@ -3,7 +3,8 @@
 // Quick and dirty code to retrieve server information for the replay viewer.
 // If this would ever grow to do more stuff then put in proper structure.
 
-const wchar_t* NET_HOST = L"google.com"; // TODO Need a host.
+const wchar_t* NET_HOST = L"74.91.123.152";
+const int32_t NET_PORT = 3000;
 
 // Headers to send with a request.
 // Only used by the net thread.
@@ -46,6 +47,11 @@ std::vector<NetAPIResponse> net_responses;
 // Only used in the main thread.
 std::vector<NetAPIResponse> net_local_responses;
 
+// Current response from the server.
+// Used to allow reading the response headers.
+// Only used by the net thread.
+HINTERNET net_cur_response;
+
 // Entrypoint for API calls.
 // Call on the main thread to give a new http request to the net thread.
 void Net_MakeHttpRequest(NetAPIDesc* desc, const wchar_t* request_string, void* request_state)
@@ -71,6 +77,24 @@ DWORD Net_QueryHttpNumber(HINTERNET req_h, DWORD query_for)
     return ret;
 }
 
+bool Net_QueryHttpHeader(HINTERNET req_h, const wchar_t* header, wchar_t* dest, int32_t dest_size)
+{
+    // Querying for HTTP_QUERY_CUSTOM requires the input and output to be placed in the same buffer.
+
+    wchar_t buf[1024];
+    NET_COPY_STRINGW(header, buf);
+
+    DWORD size = sizeof(buf); // Must be size in bytes, not chars.
+
+    if (!HttpQueryInfoW(req_h, HTTP_QUERY_CUSTOM, buf, &size, NULL))
+    {
+        return false;
+    }
+
+    StringCchCopyW(dest, dest_size, buf);
+    return true;
+}
+
 int32_t Net_ReadResponse(HINTERNET response_h, void* buf, int32_t buf_size)
 {
     DWORD actually_read = 0;
@@ -79,7 +103,7 @@ int32_t Net_ReadResponse(HINTERNET response_h, void* buf, int32_t buf_size)
     return actually_read;
 }
 
-DWORD NET_REQ_FLAGS = INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
+DWORD NET_REQ_FLAGS = INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
 
 // Send request to server.
 // If the return value is valid, you can call Net_ReadHttpResponse.
@@ -99,7 +123,7 @@ HINTERNET Net_SendHttpRequest(NetAPIRequest* request)
     if (req_h)
     {
         Net_ClearHeaders();
-        Net_AddHeader(L"Authorization: Bearer %s", net_auth_token);
+        Net_AddHeader(L"KSF_AUTH_TOKEN: Bearer %s", net_auth_token);
 
         if (request->desc->add_headers_func)
         {
@@ -141,7 +165,7 @@ bool Net_ReadHttpResponse(HINTERNET req_h)
 
     if (code == HTTP_STATUS_OK)
     {
-        uint8_t buf[1024];
+        uint8_t buf[2048];
 
         while (true)
         {
@@ -208,9 +232,13 @@ DWORD CALLBACK Net_ThreadProc(LPVOID param)
 
                 if (response.status)
                 {
+                    net_cur_response = req_h;
+
                     // The API must format the response now.
                     response.response_state = request->desc->format_response_func(net_response_buffer.data(), net_response_buffer.size(), request);
                     response.status = response.response_state != NULL;
+
+                    net_cur_response = NULL;
                 }
 
                 InternetCloseHandle(req_h);
@@ -261,7 +289,14 @@ void Net_AddHeader(const wchar_t* format, ...)
 
 void Net_TerminateHeader()
 {
-    Net_AppendHeader(L"\r\n");
+    StringCchCatExW(net_headers_ptr, net_headers_rem, L"\r\n", &net_headers_ptr, &net_headers_rem, 0);
+}
+
+// Read the headers in the current response.
+bool Net_ReadHeader(const wchar_t* header, wchar_t* dest, int32_t dest_size)
+{
+    assert(net_cur_response); // Can only be called in format_response_func.
+    return Net_QueryHttpHeader(net_cur_response, header, dest, dest_size);
 }
 
 NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle, NetAPIDesc* type_check)
@@ -320,7 +355,7 @@ bool Net_InitInet()
         return false;
     }
 
-    net_session_h = InternetConnectW(net_inet_h, NET_HOST, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, INTERNET_NO_CALLBACK);
+    net_session_h = InternetConnectW(net_inet_h, NET_HOST, NET_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, INTERNET_NO_CALLBACK);
 
     if (net_session_h == NULL)
     {

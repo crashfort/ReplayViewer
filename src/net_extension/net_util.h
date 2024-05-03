@@ -4,6 +4,8 @@ char* Net_ReadFileAsString(const char* path);
 
 int32_t Net_ToUTF16(const char* value, int32_t value_length, wchar_t* buf, int32_t buf_chars);
 
+#define NET_TO_UTF16(VALUE, DEST) Net_ToUTF16(VALUE, strlen(VALUE), DEST, NET_ARRAY_SIZE(DEST));
+
 void* Net_Alloc(int32_t size);
 void* Net_ZAlloc(int32_t size); // Zero init alloc.
 void Net_Free(void* addr);

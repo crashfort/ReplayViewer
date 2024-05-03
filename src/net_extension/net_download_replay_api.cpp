@@ -2,6 +2,9 @@
 
 // Download replays from server.
 
+// Maximum size a decompressed replay can be.
+const int32_t NET_REPLAY_DL_DECOMPRESS_SIZE = 4 * 1024 * 1024;
+
 extern NetAPIDesc NET_REPLAY_DOWNLOAD_API_DESC;
 
 struct NetReplayDownloadAPIRequest
@@ -14,7 +17,7 @@ struct NetReplayDownloadAPIRequest
 
 struct NetReplayDownloadAPIResponse
 {
-    uint8_t* bytes; // File data.
+    void* bytes; // File data.
     int32_t size; // Size of file.
 };
 
@@ -23,6 +26,8 @@ struct NetReplayDownloadAPIResponse
 IForward* net_replay_dl_received;
 IForward* net_replay_dl_failed;
 
+void* net_replay_dl_decompress_buf;
+
 void Net_InitReplayDownloadAPI()
 {
     extern sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[];
@@ -30,12 +35,15 @@ void Net_InitReplayDownloadAPI()
 
     net_replay_dl_received = forwards->CreateForward("Net_ReplayDownloadReceived", ET_Event, 1, NULL, Param_Cell);
     net_replay_dl_failed = forwards->CreateForward("Net_ReplayDownloadFailed", ET_Event, 0, NULL);
+
+    net_replay_dl_decompress_buf = Net_Alloc(NET_REPLAY_DL_DECOMPRESS_SIZE);
 }
 
 void Net_FreeReplayDownloadAPI()
 {
     forwards->ReleaseForward(net_replay_dl_received);
     forwards->ReleaseForward(net_replay_dl_failed);
+    Net_Free(net_replay_dl_decompress_buf);
 }
 
 // Entrypoint for API.
@@ -48,15 +56,17 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
 
     const char* map = gamehelpers->GetCurrentMap();
 
+    wchar_t stupid_map[256];
+    NET_TO_UTF16(map, stupid_map);
+
     NetReplayDownloadAPIRequest* request_state = NET_ZALLOC(NetReplayDownloadAPIRequest);
     request_state->user_id = params[1];
     request_state->zone_id = params[2];
     request_state->angle_type = params[3];
-    request_state->index = params[4];
+    request_state->index = params[4] + 1; // Server has index based from 1.
 
-    // TODO Don't know the input path.
-    wchar_t req_string[128];
-    NET_SNPRINTFW(req_string, L"");
+    wchar_t req_string[256];
+    NET_SNPRINTFW(req_string, L"/replay/map/%s/zone/%d/rank/%d/%d", stupid_map, request_state->zone_id, request_state->index, request_state->angle_type);
 
     Net_MakeHttpRequest(&NET_REPLAY_DOWNLOAD_API_DESC, req_string, request_state);
 
@@ -66,9 +76,32 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
 // Called in the net thread to format the input bytes into a response structure.
 void* Net_FormatReplayDownloadResponse(void* input, int32_t input_size, NetAPIRequest* request)
 {
-    NetReplayDownloadAPIResponse* response_state = NET_ZALLOC(NetReplayDownloadAPIResponse);
+    // The data we get here is compressed, so we need to decompress it.
 
-    // TODO Don't know the response format.
+    // TODO There needs to be a header that gives the name of the file.
+#if 0
+    wchar_t header_value[1024];
+
+    if (!Net_ReadHeader(L"Content-Disposition", header_value, NET_ARRAY_SIZE(header_value)))
+    {
+        return NULL;
+    }
+#endif
+
+    uint32_t dest_size = NET_REPLAY_DL_DECOMPRESS_SIZE;
+    int32_t res = BZ2_bzBuffToBuffDecompress((char*)net_replay_dl_decompress_buf, &dest_size, (char*)input, input_size, 0, 0);
+
+    if (res != BZ_OK)
+    {
+        // TODO Need to log the error but we cannot use the SM logs because we are not in the main thread here.
+        return NULL;
+    }
+
+    NetReplayDownloadAPIResponse* response_state = NET_ZALLOC(NetReplayDownloadAPIResponse);
+    response_state->bytes = Net_Alloc(dest_size);
+    response_state->size = dest_size;
+
+    memcpy(response_state->bytes, net_replay_dl_decompress_buf, dest_size);
 
     return response_state;
 }
@@ -142,7 +175,10 @@ cell_t Net_ReplayDownloadWriteToFile(IPluginContext* context, const cell_t* para
 
     NetReplayDownloadAPIResponse* response_state = (NetReplayDownloadAPIResponse*)response->response_state;
 
-    HANDLE h = CreateFileA(dest_ptr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    char path_buf[PLATFORM_MAX_PATH];
+    smutils->BuildPath(Path_Game, path_buf, NET_ARRAY_SIZE(path_buf), dest_ptr);
+
+    HANDLE h = CreateFileA(path_buf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (h == INVALID_HANDLE_VALUE)
     {

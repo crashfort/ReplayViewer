@@ -8,7 +8,7 @@
 public void RV_CreateDirs()
 {
     char replays_path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, replays_path, sizeof(replays_path), "%s/%s", RV_ROOT_PATH, "replays");
+    BuildPath(Path_SM, replays_path, sizeof(replays_path), "%s/replays", RV_ROOT_PATH);
 
     RV_MaybeCreateDir(RV_ROOT_PATH);
     RV_MaybeCreateDir(replays_path);

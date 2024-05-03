@@ -138,6 +138,28 @@ public Action RV_PrintTimesCmd(int client, int args)
     return Plugin_Handled;
 }
 
+// TODO Disable when server have the needed routes.
+public Action RV_TestDownloadCmd(int client, int args)
+{
+    if (args < 2)
+    {
+        PrintToChatAll("Usage: sm_test_download <zone id> <replay index>");
+        return Plugin_Handled;
+    }
+
+    char arg_zone_id[128];
+    GetCmdArg(1, arg_zone_id, sizeof(arg_zone_id));
+
+    char arg_index[128];
+    GetCmdArg(2, arg_index, sizeof(arg_index));
+
+    int zone_id = StringToInt(arg_zone_id);
+    int index = StringToInt(arg_index);
+
+    Net_DownloadReplay(0, zone_id, NET_ANGLE_TYPE_FW, index);
+    return Plugin_Handled;
+}
+
 public void RV_RegisterCmds()
 {
     RegConsoleCmd("sm_replay_viewer", RV_OpenInterfaceCmd);
@@ -147,6 +169,7 @@ public void RV_RegisterCmds()
     RegConsoleCmd("sm_reset_playback", RV_ResetPlaybackCmd);
     RegConsoleCmd("sm_load_all_replays", RV_LoadAllReplaysCmd);
     RegConsoleCmd("sm_print_times", RV_PrintTimesCmd);
+    RegConsoleCmd("sm_test_download", RV_TestDownloadCmd); // TODO Disable when server have the needed routes.
 }
 
 // Remove entities that teleport everyone to the jail after a timeout.

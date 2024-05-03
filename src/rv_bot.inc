@@ -71,8 +71,11 @@ public void RV_SpawnBot(RVBot bot, char[] name, int team)
     ChangeClientTeam(bot.id, team);
     CS_RespawnPlayer(bot.id);
 
+    // No seethrough for now.
+#if 0
     SetEntityRenderMode(bot.id, RENDER_TRANSADD);
     SetEntityRenderColor(bot.id, 255, 255, 255, 100);
+#endif
 
     // Having a bot in noclip and zero gravity ensures it's smooth.
     SetEntityMoveType(bot.id, MOVETYPE_NOCLIP);
