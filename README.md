@@ -41,9 +41,10 @@ You can use the menu interface, or the commands below to control the replay view
 
 ## Building the C++ extension code
 
-1. Following [AlliedModders recommendation](https://wiki.alliedmods.net/Writing_Extensions#Environment_Variables):
+1. Following [AlliedModders environment variables recommendation](https://wiki.alliedmods.net/Writing_Extensions#Environment_Variables):
 2. Clone [SourceMod](https://github.com/alliedmodders/sourcemod/), [Metamod](https://github.com/alliedmodders/metamod-source/) and [HL2 SDK](https://github.com/alliedmodders/hl2sdk).
 3. Set `HL2SDKCSS` to the cloned path of `HL2 SDK`.
 4. Set `MMSOURCE19` to the cloned path of `Metamod`.
 5. Set `SMSOURCE` to the cloned path of `SourceMod`.
-6. Open `extensions.sln`.
+6. Build `deps\bzip2\bzip2.sln` in **Release x86**.
+7. Open `extensions.sln`.
