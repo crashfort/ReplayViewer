@@ -63,7 +63,7 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
     request_state->user_id = params[1];
     request_state->zone_id = params[2];
     request_state->angle_type = params[3];
-    request_state->index = params[4] + 1; // Server has index based from 1.
+    request_state->index = params[4];
 
     wchar_t req_string[256];
     NET_SNPRINTFW(req_string, L"/replay/map/%s/zone/%d/rank/%d/%d", stupid_map, request_state->zone_id, request_state->index, request_state->angle_type);
