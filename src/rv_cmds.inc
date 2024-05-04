@@ -143,20 +143,20 @@ public Action RV_TestDownloadCmd(int client, int args)
 {
     if (args < 2)
     {
-        PrintToChatAll("Usage: sm_test_download <zone id> <replay index>");
+        PrintToChatAll("Usage: sm_test_download <zone id> <replay rank>");
         return Plugin_Handled;
     }
 
     char arg_zone_id[128];
     GetCmdArg(1, arg_zone_id, sizeof(arg_zone_id));
 
-    char arg_index[128];
-    GetCmdArg(2, arg_index, sizeof(arg_index));
+    char arg_rank[128];
+    GetCmdArg(2, arg_rank, sizeof(arg_rank));
 
     int zone_id = StringToInt(arg_zone_id);
-    int index = StringToInt(arg_index);
+    int rank = StringToInt(arg_rank);
 
-    Net_DownloadReplay(0, zone_id, NET_ANGLE_TYPE_FW, index);
+    Net_DownloadReplay(0, zone_id, NET_ANGLE_TYPE_FW, rank);
     return Plugin_Handled;
 }
 

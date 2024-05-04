@@ -68,7 +68,7 @@ native int Net_ReplayListGetRank(int response_handle, int idx); // Get the rank 
 // To get the correct values for these parameters, you should use the result from Net_DownloadMapInfo and Net_DownloadReplayList.
 // This will send Net_ReplayDownloadReceived or Net_ReplayDownloadFailed some time in the future when the network call is complete.
 // The user id is optional, but can be used to identify requests in the response handler.
-native bool Net_DownloadReplay(int user_id, int zone_id, int angle_type, int replay_idx);
+native bool Net_DownloadReplay(int user_id, int zone_id, int angle_type, int rank);
 
 forward void Net_ReplayDownloadReceived(int response_handle); // Sent in response to Net_DownloadReplay to return the response.
 forward void Net_ReplayDownloadFailed(); // Sent in response to Net_DownloadReplay if the download failed.
