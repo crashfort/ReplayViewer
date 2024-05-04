@@ -71,6 +71,7 @@ public void RV_StartPlayback()
 public void RV_StopPlayback()
 {
     RV_StopPlaybackBots();
+    RV_StopMenuLoadRestriction();
 }
 
 public void RV_ResetPlayback()

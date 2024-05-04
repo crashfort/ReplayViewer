@@ -97,6 +97,8 @@ public void RV_StartMenus()
     // Download map info immediately.
     // This will call into Net_MapInfoDownloadReceived or Net_MapInfoDownloadFailed in rv_net_callbacks.inc.
     Net_DownloadMapInfo();
+
+    rv_loaded_streams = CreateTrie();
 }
 
 // Called on map end.
@@ -109,6 +111,7 @@ public void RV_StopMenus()
 
     delete rv_zone_list_menu;
     delete rv_main_menu;
+    delete rv_loaded_streams;
 }
 
 public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int param2)
@@ -218,6 +221,10 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
             RV_LoadStreamSpawnBot(replay_id);
         }
 
+        // Set so this cannot be loaded again.
+        // This will not allow you to retry to download if it fails, which is bad but we don't really handle that case.
+        SetTrieValue(rv_loaded_streams, replay_id, 1);
+
         DisplayMenu(menu, param1, MENU_TIME_FOREVER);
     }
 
@@ -231,6 +238,21 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
 
     else if (action == MenuAction_End)
     {
+    }
+
+    else if (action == MenuAction_DrawItem)
+    {
+        int dummy;
+
+        char replay_id[RV_REPLAY_ID_SIZE];
+        GetMenuItem(menu, param2, replay_id, sizeof(replay_id));
+
+        if (GetTrieValue(rv_loaded_streams, replay_id, dummy))
+        {
+            return ITEMDRAW_DISABLED; // This is already loaded, disable item.
+        }
+
+        return ITEMDRAW_DEFAULT;
     }
 
     return 0;
@@ -250,7 +272,7 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     char menu_title[128];
     Format(menu_title, sizeof(menu_title), "%s (%d replays)", zone_title, num_replays);
 
-    Menu menu = CreateMenu(RV_HandleSelectReplayMenu);
+    Menu menu = CreateMenu(RV_HandleSelectReplayMenu, MENU_ACTIONS_DEFAULT | MenuAction_DrawItem);
     SetMenuTitle(menu, menu_title);
     SetMenuExitBackButton(menu, true);
 
@@ -275,4 +297,9 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     rv_zone_menus[zone_id] = menu;
 
     DisplayMenu(menu, user_id, MENU_TIME_FOREVER);
+}
+
+public void RV_StopMenuLoadRestriction()
+{
+    ClearTrie(rv_loaded_streams);
 }
