@@ -61,6 +61,7 @@ native void Net_ReplayListGetPlayerName(int response_handle, int idx, char[] des
 native int Net_ReplayListGetTime(int response_handle, int idx); // Get the finishing time of a replay.
 native int Net_ReplayListGetZoneId(int response_handle); // Get the zone id of a replay.
 native int Net_ReplayListGetAngleType(int response_handle); // Get the angle type of a replay.
+native int Net_ReplayListGetRank(int response_handle, int idx); // Get the rank of a replay.
 
 // Download a particular replay for the given zone and leaderboard.
 // The replay index comes from the zone replay list.
@@ -76,4 +77,4 @@ native int Net_ReplayDownloadGetUserId(int response_handle); // Get the user id 
 native bool Net_ReplayDownloadWriteToFile(int response_handle, char[] dest); // Write the replay file to file.
 native int Net_ReplayDownloadGetZoneId(int response_handle); // Get the zone id of a replay.
 native int Net_ReplayDownloadGetAngleType(int response_handle); // Get the angle type of a replay.
-native int Net_ReplayDownloadGetIndex(int response_handle); // Get the index of a replay in the replay list.
+native int Net_ReplayDownloadGetRank(int response_handle); // Get the index of a replay in the replay list.

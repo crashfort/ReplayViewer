@@ -281,10 +281,10 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
 
         int angle_type = StringToInt(tokens[0]);
         int zone_id = StringToInt(tokens[1]);
-        int replay_idx = StringToInt(tokens[2]);
+        int replay_rank = StringToInt(tokens[2]);
 
         char stream_id[RV_REPLAY_ID_SIZE];
-        RV_MakeReplayIdentifier(angle_type, zone_id, replay_idx, stream_id, sizeof(stream_id));
+        RV_MakeReplayIdentifier(angle_type, zone_id, replay_rank, stream_id, sizeof(stream_id));
 
         char load_path[PLATFORM_MAX_PATH];
         RV_GetReplayFilePath(stream_id, load_path, sizeof(load_path));
@@ -294,7 +294,7 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
         if (!FileExists(load_path))
         {
             DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
-            Net_DownloadReplay(param1, zone_id, angle_type, replay_idx);
+            Net_DownloadReplay(param1, zone_id, angle_type, replay_rank);
         }
 
         else
@@ -333,11 +333,12 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     {
         Net_ReplayListGetPlayerName(response_handle, i, name_display, sizeof(name_display));
         int time = Net_ReplayListGetTime(response_handle, i);
+        int rank = Net_ReplayListGetRank(response_handle, i); // Rank needed for future download, also nice to display.
 
         Format(time_display, sizeof(time_display), "%d", time); // TODO Don't know what unit we are getting from the server.
         Format(display, sizeof(display), "%s - %s", time_display, name_display);
 
-        RV_MakeReplayIdentifier(angle_type, zone_id, i, info, sizeof(info));
+        RV_MakeReplayIdentifier(angle_type, zone_id, rank, info, sizeof(info));
 
         AddMenuItem(new_menu, info, display);
     }

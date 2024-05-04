@@ -12,7 +12,7 @@ struct NetReplayDownloadAPIRequest
     int32_t user_id;
     int32_t zone_id;
     int32_t angle_type;
-    int32_t index;
+    int32_t rank;
 };
 
 struct NetReplayDownloadAPIResponse
@@ -63,10 +63,10 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
     request_state->user_id = params[1];
     request_state->zone_id = params[2];
     request_state->angle_type = params[3];
-    request_state->index = params[4];
+    request_state->rank = params[4];
 
     wchar_t req_string[256];
-    NET_SNPRINTFW(req_string, L"/replay/map/%s/zone/%d/rank/%d/%d", stupid_map, request_state->zone_id, request_state->index, request_state->angle_type);
+    NET_SNPRINTFW(req_string, L"/replay/map/%s/zone/%d/rank/%d/%d", stupid_map, request_state->zone_id, request_state->rank, request_state->angle_type);
 
     Net_MakeHttpRequest(&NET_REPLAY_DOWNLOAD_API_DESC, req_string, request_state);
 
@@ -220,7 +220,7 @@ cell_t Net_ReplayDownloadGetAngleType(IPluginContext* context, const cell_t* par
     return request_state->angle_type;
 }
 
-cell_t Net_ReplayDownloadGetIndex(IPluginContext* context, const cell_t* params)
+cell_t Net_ReplayDownloadGetRank(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
@@ -231,7 +231,7 @@ cell_t Net_ReplayDownloadGetIndex(IPluginContext* context, const cell_t* params)
     }
 
     NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
-    return request_state->index;
+    return request_state->rank;
 }
 
 sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[] = {
@@ -240,7 +240,7 @@ sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_ReplayDownloadWriteToFile", Net_ReplayDownloadWriteToFile },
     sp_nativeinfo_t { "Net_ReplayDownloadGetZoneId", Net_ReplayDownloadGetZoneId },
     sp_nativeinfo_t { "Net_ReplayDownloadGetAngleType", Net_ReplayDownloadGetAngleType },
-    sp_nativeinfo_t { "Net_ReplayDownloadGetIndex", Net_ReplayDownloadGetIndex },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetRank", Net_ReplayDownloadGetRank },
     sp_nativeinfo_t { NULL, NULL },
 };
 

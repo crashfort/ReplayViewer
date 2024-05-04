@@ -15,6 +15,7 @@ struct NetReplayListing
 {
     char name[512];
     int32_t time;
+    int32_t rank;
 };
 
 struct NetReplayListAPIResponse
@@ -223,6 +224,28 @@ cell_t Net_ReplayListGetAngleType(IPluginContext* context, const cell_t* params)
     return request_state->angle_type;
 }
 
+cell_t Net_ReplayListGetRank(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetReplayListAPIResponse* response_state = (NetReplayListAPIResponse*)response->response_state;
+
+    if (!Net_IdxInRange(params[2], response_state->num_listings))
+    {
+        context->ReportError("Index out of range (passed %d, max is %d)", params[2], response_state->num_listings);
+        return 0;
+    }
+
+    NetReplayListing* listing = &response_state->listings[params[2]];
+    return listing->rank;
+}
+
 sp_nativeinfo_t NET_REPLAY_LIST_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadReplayList", Net_DownloadReplayList },
     sp_nativeinfo_t { "Net_ReplayListGetUserId", Net_ReplayListGetUserId },
@@ -231,6 +254,7 @@ sp_nativeinfo_t NET_REPLAY_LIST_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_ReplayListGetTime", Net_ReplayListGetTime },
     sp_nativeinfo_t { "Net_ReplayListGetZoneId", Net_ReplayListGetZoneId },
     sp_nativeinfo_t { "Net_ReplayListGetAngleType", Net_ReplayListGetAngleType },
+    sp_nativeinfo_t { "Net_ReplayListGetRank", Net_ReplayListGetRank },
     sp_nativeinfo_t { NULL, NULL },
 };
 

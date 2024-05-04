@@ -266,10 +266,10 @@ public void RV_ProcessDownloadedReplay(int response_handle)
 {
     int zone_id = Net_ReplayDownloadGetZoneId(response_handle);
     int angle_type = Net_ReplayDownloadGetAngleType(response_handle);
-    int replay_idx = Net_ReplayDownloadGetIndex(response_handle);
+    int replay_rank = Net_ReplayDownloadGetRank(response_handle);
 
     char stream_id[RV_REPLAY_ID_SIZE];
-    RV_MakeReplayIdentifier(angle_type, zone_id, replay_idx, stream_id, sizeof(stream_id));
+    RV_MakeReplayIdentifier(angle_type, zone_id, replay_rank, stream_id, sizeof(stream_id));
 
     // Save the stream to file and then load that.
     // This makes it a lot easier because the code for loading a file already exists.
@@ -287,7 +287,7 @@ public void RV_ProcessDownloadedReplay(int response_handle)
 
     Net_ReplayDownloadWriteToFile(response_handle, save_path);
 
-    PrintToChatAll("Downloaded %s", save_path);
+    PrintToServer("Downloaded %s", save_path);
 
     // TODO Enable when server have the needed routes.
     // RV_LoadStreamSpawnBot(stream_id);
@@ -295,7 +295,7 @@ public void RV_ProcessDownloadedReplay(int response_handle)
 
 // Use this to create a replay identifier.
 // The replay identifier should be treated as opaque, and not be read or written manually.
-public void RV_MakeReplayIdentifier(int angle_type, int zone_id, int replay_idx, char[] dest, int dest_size)
+public void RV_MakeReplayIdentifier(int angle_type, int zone_id, int replay_rank, char[] dest, int dest_size)
 {
-    Format(dest, dest_size, "%d;%d;%d", angle_type, zone_id, replay_idx);
+    Format(dest, dest_size, "%d;%d;%d", angle_type, zone_id, replay_rank);
 }
