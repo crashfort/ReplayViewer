@@ -22,6 +22,8 @@
 #include "rv_player.inc"
 #include "rv_round.inc"
 #include "rv_net_callbacks.inc"
+#include "rv_nav.inc"
+#include "rv_delays.inc"
 
 // Main interface from SourceMod.
 

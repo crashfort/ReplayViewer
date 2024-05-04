@@ -31,6 +31,8 @@ public void RV_MapStart()
 {
     GetCurrentMap(rv_cur_map, sizeof(rv_cur_map));
 
+    RV_StartNav();
+    RV_StartDelays();
     RV_StartMapCmds();
     RV_StartMapBots();
     RV_StartMenus();

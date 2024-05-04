@@ -419,6 +419,27 @@ cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
     return Net_ConnectedToInet();
 }
 
+cell_t Net_CreateDummyNavForMap(IPluginContext* context, const cell_t* params)
+{
+    const char* map = gamehelpers->GetCurrentMap();
+
+    char* source_ptr;
+    context->LocalToString(params[1], &source_ptr);
+
+    char source_path_buf[PLATFORM_MAX_PATH];
+    smutils->BuildPath(Path_Game, source_path_buf, NET_ARRAY_SIZE(source_path_buf), source_ptr);
+
+    char dest_ptr[PLATFORM_MAX_PATH];
+    NET_SNPRINTF(dest_ptr, "maps\\%s.nav", map);
+
+    char dest_path_buf[PLATFORM_MAX_PATH];
+    smutils->BuildPath(Path_Game, dest_path_buf, NET_ARRAY_SIZE(dest_path_buf), dest_ptr);
+
+    CopyFileA(source_path_buf, dest_path_buf, TRUE); // Don't need to overwrite if something exists already.
+
+    return 0;
+}
+
 bool Net_Init()
 {
     if (!Net_InitInet())
@@ -498,5 +519,6 @@ void Net_Shutdown()
 
 sp_nativeinfo_t NET_NATIVES[] = {
     sp_nativeinfo_t { "Net_ConnectedToInet", Net_ConnectedToInet },
+    sp_nativeinfo_t { "Net_CreateDummyNavForMap", Net_CreateDummyNavForMap },
     sp_nativeinfo_t { NULL, NULL },
 };

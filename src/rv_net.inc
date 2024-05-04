@@ -99,3 +99,6 @@ forward void Net_ReplayDownloadFailed(); // Sent in response to Net_DownloadRepl
 native int Net_ReplayDownloadGetUserId(int response_handle); // Get the user id passed in the request.
 native bool Net_ReplayDownloadWriteToFile(int response_handle, char[] dest); // Write the replay file to file.
 native int Net_ReplayDownloadGetId(int response_handle, char[] dest, int dest_size); // Get the unique identifier of a replay.
+
+// Create a dummy navigation file so it doesn't take ages to load new maps.
+native void Net_CreateDummyNavForMap(char[] dummy_nav_path);

@@ -30,9 +30,6 @@ public void RV_StartMapBots()
     {
         rv_bot_maps[i] = 0;
     }
-
-    // Must wait a bit before we can find the bots.
-    CreateTimer(1.0, RV_FindBots);
 }
 
 public int RV_GetBotIdxFromId(int id)

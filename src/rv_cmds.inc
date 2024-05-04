@@ -16,17 +16,10 @@ public void RV_RegisterCmds()
     RegConsoleCmd("sm_replay_viewer", RV_MainMenuCmd);
 }
 
-// Remove entities that teleport everyone to the jail after a timeout.
-public Action RV_RemoveJails(Handle timer)
+public Action RV_SpawnBots(Handle timer)
 {
-    ServerCommand("ent_remove_all logic_timer");
-    return Plugin_Stop;
-}
-
-// Set some prerequisites that we want.
-public void RV_StartMapCmds()
-{
-    ServerCommand("sv_cheats 1");
+    ServerCommand("nav_load"); // Use the dummy file we created in RV_StartNav.
+    ServerExecute();
 
     ServerCommand("bot_chatter off");
     ServerCommand("bot_stop 1");
@@ -38,8 +31,23 @@ public void RV_StartMapCmds()
     ServerCommand("bot_join_after_player 0");
     ServerCommand("mp_limitteams 0");
 
-    CreateTimer(1.0, RV_RemoveJails); // Must wait a bit before we can remove stuff.
-
     // Don't let the bot commands be overwritten.
+    ServerExecute();
+
+    return Plugin_Stop;
+}
+
+// Remove entities that teleport everyone to the jail after a timeout.
+public Action RV_RemoveJails(Handle timer)
+{
+    ServerCommand("ent_remove_all logic_timer");
+    ServerExecute();
+    return Plugin_Stop;
+}
+
+// Set some prerequisites that we want.
+public void RV_StartMapCmds()
+{
+    ServerCommand("sv_cheats 1");
     ServerExecute();
 }

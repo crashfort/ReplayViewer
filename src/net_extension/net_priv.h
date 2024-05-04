@@ -19,6 +19,7 @@
 #define NET_UNLOCK(SRW) ReleaseSRWLockExclusive((SRW))
 
 #define NET_ARRAY_SIZE(A) (sizeof(A) / sizeof(A[0]))
+#define NET_SNPRINTF(BUF, FORMAT, ...) StringCchPrintfA((BUF), NET_ARRAY_SIZE((BUF)), (FORMAT), __VA_ARGS__)
 #define NET_SNPRINTFW(BUF, FORMAT, ...) StringCchPrintfW((BUF), NET_ARRAY_SIZE((BUF)), (FORMAT), __VA_ARGS__)
 #define NET_VSNPRINTFW(BUF, FORMAT, VA) StringCchVPrintfW((BUF), NET_ARRAY_SIZE((BUF)), (FORMAT), VA)
 #define NET_COPY_STRING(SOURCE, DEST) StringCchCopyA((DEST), NET_ARRAY_SIZE((DEST)), (SOURCE))
