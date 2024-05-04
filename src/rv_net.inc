@@ -29,6 +29,27 @@ stock int Net_GetBonusZone(int idx)
     return NET_ZONE_FIRST_BONUS + idx;
 }
 
+stock void Net_CategorizeZoneId(int zone_id, char[] dest, int dest_size)
+{
+    if (zone_id == NET_ZONE_MAP)
+    {
+        Format(dest, dest_size, "Map");
+        return;
+    }
+
+    if (zone_id >= NET_ZONE_FIRST_BONUS)
+    {
+        Format(dest, dest_size, "Bonus %d", (zone_id - NET_ZONE_FIRST_BONUS) + 1);
+        return;
+    }
+
+    if (zone_id >= NET_ZONE_FIRST_STAGE)
+    {
+        Format(dest, dest_size, "Stage %d", (zone_id - NET_ZONE_FIRST_STAGE) + 1);
+        return;
+    }
+}
+
 // The response handles are only valid to be used in the functions that pass them.
 // Some functions allow to pass a user id. This is very useful if you are working with menus to refer
 // to the client, when you need to open a menu again after the network download.

@@ -239,7 +239,14 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     int zone_id = Net_ReplayListGetZoneId(response_handle);
     int num_replays = Net_ReplayListGetNum(response_handle);
 
+    char zone_title[32];
+    Net_CategorizeZoneId(zone_id, zone_title, sizeof(zone_title));
+
+    char menu_title[128];
+    Format(menu_title, sizeof(menu_title), "%s (%d replays)", zone_title, num_replays);
+
     Menu menu = CreateMenu(RV_HandleSelectReplayMenu);
+    SetMenuTitle(menu, menu_title);
     SetMenuExitBackButton(menu, true);
 
     char full_row_display[256];
