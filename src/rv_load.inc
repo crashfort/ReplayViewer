@@ -90,6 +90,10 @@ bool RV_LoadFileStream(char[] path, RVStream stream)
     return true;
 }
 
+// !!!!!!!!!!!!!!!!!!!!!!!!!
+// Code unused for now, offline playback would need more menu work to work good.
+// !!!!!!!!!!!!!!!!!!!!!!!!!
+
 // Instead of managing a huge list with many pages of hard to read names,
 // let the file management be done in the file explorer and just add everything in there.
 public void RV_AddAllFileReplaysForMap()
@@ -248,7 +252,7 @@ public bool RV_LoadStreamSpawnBot(char[] stream_id)
     }
 
     char name[256];
-    Format(name, sizeof(name), "%s (%s)", listing.name, listing.date);
+    Format(name, sizeof(name), "[%s] %s (%s)", listing.time, listing.name, listing.date);
 
     bool res = RV_SpawnBotWithStream(stream, name);
     return res;
