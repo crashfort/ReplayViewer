@@ -10,9 +10,7 @@ extern NetAPIDesc NET_REPLAY_DOWNLOAD_API_DESC;
 struct NetReplayDownloadAPIRequest
 {
     int32_t user_id;
-    int32_t zone_id;
-    int32_t angle_type;
-    int32_t rank;
+    char id[128];
 };
 
 struct NetReplayDownloadAPIResponse
@@ -54,19 +52,18 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
         return 0;
     }
 
-    const char* map = gamehelpers->GetCurrentMap();
-
-    wchar_t stupid_map[256];
-    NET_TO_UTF16(map, stupid_map);
+    char* id_ptr;
+    context->LocalToString(params[2], &id_ptr);
 
     NetReplayDownloadAPIRequest* request_state = NET_ZALLOC(NetReplayDownloadAPIRequest);
     request_state->user_id = params[1];
-    request_state->zone_id = params[2];
-    request_state->angle_type = params[3];
-    request_state->rank = params[4];
+    NET_COPY_STRING(id_ptr, request_state->id);
+
+    wchar_t stupid_query[128];
+    NET_TO_UTF16(id_ptr, stupid_query);
 
     wchar_t req_string[256];
-    NET_SNPRINTFW(req_string, L"/replay/map/%s/zone/%d/rank/%d/%d", stupid_map, request_state->zone_id, request_state->rank, request_state->angle_type);
+    NET_SNPRINTFW(req_string, L"/replay/download/%s", stupid_query);
 
     Net_MakeHttpRequest(&NET_REPLAY_DOWNLOAD_API_DESC, req_string, request_state);
 
@@ -77,16 +74,6 @@ cell_t Net_DownloadReplay(IPluginContext* context, const cell_t* params)
 void* Net_FormatReplayDownloadResponse(void* input, int32_t input_size, NetAPIRequest* request)
 {
     // The data we get here is compressed, so we need to decompress it.
-
-    // TODO There needs to be a header that gives the name of the file.
-#if 0
-    wchar_t header_value[1024];
-
-    if (!Net_ReadHeader(L"Content-Disposition", header_value, NET_ARRAY_SIZE(header_value)))
-    {
-        return NULL;
-    }
-#endif
 
     uint32_t dest_size = NET_REPLAY_DL_DECOMPRESS_SIZE;
     int32_t res = BZ2_bzBuffToBuffDecompress((char*)net_replay_dl_decompress_buf, &dest_size, (char*)input, input_size, 0, 0);
@@ -124,7 +111,6 @@ void Net_HandleReplayDownloadResponse(NetAPIResponse* response)
     }
 }
 
-// Called when the script calls Net_CloseHandle on the handle from Net_MakeResponseHandle or automatically by the net state when the response fails.
 void Net_FreeReplayDownloadResponse(NetAPIResponse* response)
 {
     NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
@@ -192,7 +178,7 @@ cell_t Net_ReplayDownloadWriteToFile(IPluginContext* context, const cell_t* para
     return 1;
 }
 
-cell_t Net_ReplayDownloadGetZoneId(IPluginContext* context, const cell_t* params)
+cell_t Net_ReplayDownloadGetId(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
 
@@ -203,44 +189,20 @@ cell_t Net_ReplayDownloadGetZoneId(IPluginContext* context, const cell_t* params
     }
 
     NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
-    return request_state->zone_id;
-}
 
-cell_t Net_ReplayDownloadGetAngleType(IPluginContext* context, const cell_t* params)
-{
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+    char* dest_ptr;
+    context->LocalToString(params[2], &dest_ptr);
 
-    if (response == NULL)
-    {
-        context->ReportError("Invalid handle");
-        return 0;
-    }
+    StringCchCopyA(dest_ptr, params[3], request_state->id);
 
-    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
-    return request_state->angle_type;
-}
-
-cell_t Net_ReplayDownloadGetRank(IPluginContext* context, const cell_t* params)
-{
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
-
-    if (response == NULL)
-    {
-        context->ReportError("Invalid handle");
-        return 0;
-    }
-
-    NetReplayDownloadAPIRequest* request_state = (NetReplayDownloadAPIRequest*)response->request_state;
-    return request_state->rank;
+    return 1;
 }
 
 sp_nativeinfo_t NET_REPLAY_DOWNLOAD_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadReplay", Net_DownloadReplay },
     sp_nativeinfo_t { "Net_ReplayDownloadGetUserId", Net_ReplayDownloadGetUserId },
     sp_nativeinfo_t { "Net_ReplayDownloadWriteToFile", Net_ReplayDownloadWriteToFile },
-    sp_nativeinfo_t { "Net_ReplayDownloadGetZoneId", Net_ReplayDownloadGetZoneId },
-    sp_nativeinfo_t { "Net_ReplayDownloadGetAngleType", Net_ReplayDownloadGetAngleType },
-    sp_nativeinfo_t { "Net_ReplayDownloadGetRank", Net_ReplayDownloadGetRank },
+    sp_nativeinfo_t { "Net_ReplayDownloadGetId", Net_ReplayDownloadGetId },
     sp_nativeinfo_t { NULL, NULL },
 };
 

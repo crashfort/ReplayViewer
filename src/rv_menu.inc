@@ -31,84 +31,35 @@ public void RV_ExtractMenuItemTokens(Menu menu, int item, char[][] dest, int num
     ExplodeString(info, ";", dest, num_tokens, token_size);
 }
 
-public int RV_HandleAddReplaysMenu(Menu menu, MenuAction action, int param1, int param2)
+public int RV_HandlePlaybackMenu(Menu menu, MenuAction action, int param1, int param2)
 {
     if (action == MenuAction_Select)
     {
-        int client = param1;
         RVMenuId item = RV_GetMenuItemId(menu, param2);
 
         switch (item)
         {
-            case RV_MENU_ADD_ALL_REPLAYS_FOR_MAP:
-            {
-                RV_AddAllFileReplaysForMap();
-                RV_OpenInterfaceMenu(client);
-            }
-        }
-    }
-
-    else if (action == MenuAction_Cancel)
-    {
-        int client = param1;
-        RV_OpenInterfaceMenu(client);
-    }
-
-    else if (action == MenuAction_End)
-    {
-        delete menu;
-    }
-
-    return 0;
-}
-
-// Options for adding new replays.
-public void RV_OpenAddReplaysMenu(int client)
-{
-    Menu menu = CreateMenu(RV_HandleAddReplaysMenu);
-    SetMenuTitle(menu, "Add replays");
-
-    RV_MenuAddEnumItem(menu, RV_MENU_ADD_ALL_REPLAYS_FOR_MAP, "All replays for map");
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int RV_HandleInterfaceMenu(Menu menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        int client = param1;
-        RVMenuId item = RV_GetMenuItemId(menu, param2);
-
-        switch (item)
-        {
-            case RV_MENU_ADD_REPLAYS:
-            {
-                RV_OpenAddReplaysMenu(client);
-            }
-
             case RV_MENU_START_PLAYBACK:
             {
                 RV_StartPlayback();
-                RV_OpenInterfaceMenu(client);
+                DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
             }
 
             case RV_MENU_STOP_PLAYBACK:
             {
                 RV_StopPlayback();
-                RV_OpenInterfaceMenu(client);
+                DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
             }
 
             case RV_MENU_RESET_PLAYBACK:
             {
                 RV_ResetPlayback();
-                RV_OpenInterfaceMenu(client);
+                DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
             }
 
-            case RV_MENU_SHOW_REPLAY_TIMES:
+            case RV_MENU_LIST_ZONES:
             {
-                RV_ShowReplayTimes();
-                RV_OpenInterfaceMenu(client);
+                DisplayMenu(rv_zone_list_menu, param1, MENU_TIME_FOREVER);
             }
         }
     }
@@ -119,66 +70,26 @@ public int RV_HandleInterfaceMenu(Menu menu, MenuAction action, int param1, int 
 
     else if (action == MenuAction_End)
     {
-        delete menu;
     }
 
     return 0;
 }
 
-// Main user interaction with the system.
-public void RV_OpenInterfaceMenu(int client)
+public void RV_CreateMainMenu()
 {
-    Menu menu = CreateMenu(RV_HandleInterfaceMenu);
-    SetMenuTitle(menu, "Replay Viewer");
+    rv_main_menu = CreateMenu(RV_HandlePlaybackMenu);
+    SetMenuTitle(rv_main_menu, "Replay Viewer");
 
-    // Access state should be synchronized with rv_cmds.inc.
-
-    switch (rv_sys_state)
-    {
-        case RV_SYS_IDLE:
-        {
-            RV_MenuAddEnumItem(menu, RV_MENU_ADD_REPLAYS, "Add replays");
-        }
-
-        case RV_SYS_REPLAYS_LOADED:
-        {
-            RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
-            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
-            RV_MenuAddEnumItem(menu, RV_MENU_SHOW_REPLAY_TIMES, "Show times");
-        }
-
-        case RV_SYS_PLAYING:
-        {
-            RV_MenuAddEnumItem(menu, RV_MENU_RESET_PLAYBACK, "Reset playback");
-            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
-        }
-
-        case RV_SYS_PAUSED:
-        {
-            RV_MenuAddEnumItem(menu, RV_MENU_START_PLAYBACK, "Start playback");
-            RV_MenuAddEnumItem(menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
-            RV_MenuAddEnumItem(menu, RV_MENU_SHOW_REPLAY_TIMES, "Show times");
-        }
-    }
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int RV_HandleWaitMenu(Menu menu, MenuAction action, int param1, int param2)
-{
-    return 0;
-}
-
-public void RV_CreateWaitMenu()
-{
-    rv_wait_menu = CreateMenu(RV_HandleWaitMenu);
-    SetMenuTitle(rv_wait_menu, "Loading");
+    RV_MenuAddEnumItem(rv_main_menu, RV_MENU_START_PLAYBACK, "Start playback");
+    RV_MenuAddEnumItem(rv_main_menu, RV_MENU_STOP_PLAYBACK, "Stop playback");
+    RV_MenuAddEnumItem(rv_main_menu, RV_MENU_RESET_PLAYBACK, "Reset playback");
+    RV_MenuAddEnumItem(rv_main_menu, RV_MENU_LIST_ZONES, "List replays");
 }
 
 // Called on map start.
 public void RV_StartMenus()
 {
-    RV_CreateWaitMenu();
+    RV_CreateMainMenu();
 
     // Download map info immediately.
     // This will call into Net_MapInfoDownloadReceived or Net_MapInfoDownloadFailed in rv_net_callbacks.inc.
@@ -194,7 +105,7 @@ public void RV_StopMenus()
     }
 
     delete rv_zone_list_menu;
-    delete rv_wait_menu;
+    delete rv_main_menu;
 }
 
 public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int param2)
@@ -212,7 +123,6 @@ public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int
         // This will call into Net_ReplayListDownloadReceived or Net_ReplayListDownloadFailed in rv_net_callbacks.inc.
         if (rv_zone_menus[zone_id] == null)
         {
-            DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
             Net_DownloadReplayList(param1, zone_id, angle_type);
         }
 
@@ -224,6 +134,10 @@ public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int
 
     else if (action == MenuAction_Cancel)
     {
+        if (param2 == MenuCancel_ExitBack)
+        {
+            DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER); // Go back to the main menu.
+        }
     }
 
     else if (action == MenuAction_End)
@@ -238,26 +152,31 @@ public void RV_CreateZoneListMenu(int response_handle)
 {
     int num_stages = Net_MapInfoGetNumStages(response_handle);
     int num_bonuses = Net_MapInfoGetNumBonuses(response_handle);
+    bool linear = Net_MapInfoGetLinear(response_handle);
 
     rv_zone_list_menu = CreateMenu(RV_HandleSelectZoneMenu);
     SetMenuTitle(rv_zone_list_menu, "Select zone");
+    SetMenuExitBackButton(rv_zone_list_menu, true);
 
     char display[64];
-    char info[RV_REPLAY_ID_SIZE];
+    char info[32];
 
     // Only forward angle type for now because this is hella messy already.
 
     Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, NET_ZONE_MAP);
     AddMenuItem(rv_zone_list_menu, info, "Map");
 
-    for (int i = 0; i < num_stages; i++)
+    if (!linear)
     {
-        int zone_id = Net_GetStageZone(i);
+        for (int i = 0; i < num_stages; i++)
+        {
+            int zone_id = Net_GetStageZone(i);
 
-        Format(display, sizeof(display), "Stage %d", i + 1);
-        Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, zone_id);
+            Format(display, sizeof(display), "Stage %d", i + 1);
+            Format(info, sizeof(info), "%d;%d", NET_ANGLE_TYPE_FW, zone_id);
 
-        AddMenuItem(rv_zone_list_menu, info, display);
+            AddMenuItem(rv_zone_list_menu, info, display);
+        }
     }
 
     for (int i = 0; i < num_bonuses; i++)
@@ -276,35 +195,33 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
     // User has selected a replay within a zone.
     if (action == MenuAction_Select)
     {
-        char tokens[3][32];
-        RV_ExtractMenuItemTokens(menu, param2, tokens, sizeof(tokens), sizeof(tokens[]));
-
-        int angle_type = StringToInt(tokens[0]);
-        int zone_id = StringToInt(tokens[1]);
-        int replay_rank = StringToInt(tokens[2]);
-
-        char stream_id[RV_REPLAY_ID_SIZE];
-        RV_MakeReplayIdentifier(angle_type, zone_id, replay_rank, stream_id, sizeof(stream_id));
+        char replay_id[RV_REPLAY_ID_SIZE];
+        GetMenuItem(menu, param2, replay_id, sizeof(replay_id));
 
         char load_path[PLATFORM_MAX_PATH];
-        RV_GetReplayFilePath(stream_id, load_path, sizeof(load_path));
+        RV_GetReplayFilePath(replay_id, load_path, sizeof(load_path));
 
         // Download the replay if we have to.
         // This will call into Net_ReplayDownloadReceived or Net_ReplayDownloadFailed in rv_net_callbacks.inc.
         if (!FileExists(load_path))
         {
-            DisplayMenu(rv_wait_menu, param1, MENU_TIME_FOREVER);
-            Net_DownloadReplay(param1, zone_id, angle_type, replay_rank);
+            Net_DownloadReplay(param1, replay_id);
         }
 
         else
         {
-            RV_LoadStreamSpawnBot(stream_id);
+            RV_LoadStreamSpawnBot(replay_id);
         }
+
+        DisplayMenu(menu, param1, MENU_TIME_FOREVER);
     }
 
     else if (action == MenuAction_Cancel)
     {
+        if (param2 == MenuCancel_ExitBack)
+        {
+            DisplayMenu(rv_zone_list_menu, param1, MENU_TIME_FOREVER); // Go back to zone selection.
+        }
     }
 
     else if (action == MenuAction_End)
@@ -318,33 +235,32 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
 public void RV_CreateNewReplayListMenu(int response_handle)
 {
     int user_id = Net_ReplayListGetUserId(response_handle);
-    int angle_type = Net_ReplayListGetAngleType(response_handle);
+    // int angle_type = Net_ReplayListGetAngleType(response_handle);
     int zone_id = Net_ReplayListGetZoneId(response_handle);
     int num_replays = Net_ReplayListGetNum(response_handle);
 
-    Menu new_menu = CreateMenu(RV_HandleSelectReplayMenu);
+    Menu menu = CreateMenu(RV_HandleSelectReplayMenu);
+    SetMenuExitBackButton(menu, true);
 
-    char display[256];
-    char info[RV_REPLAY_ID_SIZE];
-    char time_display[32];
+    char full_row_display[256];
+    char time_display[64];
+    char date_display[64];
     char name_display[MAX_NAME_LENGTH];
+    char replay_id[RV_REPLAY_ID_SIZE];
 
     for (int i = 0; i < num_replays; i++)
     {
-        Net_ReplayListGetPlayerName(response_handle, i, name_display, sizeof(name_display));
-        int time = Net_ReplayListGetTime(response_handle, i);
-        int rank = Net_ReplayListGetRank(response_handle, i); // Rank needed for future download, also nice to display.
+        Net_ReplayListGetName(response_handle, i, name_display, sizeof(name_display));
+        Net_ReplayListGetTime(response_handle, i, time_display, sizeof(time_display));
+        Net_ReplayListGetDate(response_handle, i, date_display, sizeof(date_display));
+        Net_ReplayListGetId(response_handle, i, replay_id, sizeof(replay_id));
 
-        Format(time_display, sizeof(time_display), "%d", time); // TODO Don't know what unit we are getting from the server.
-        Format(display, sizeof(display), "%s - %s", time_display, name_display);
+        Format(full_row_display, sizeof(full_row_display), "[%s] %s (%s)", time_display, name_display, date_display);
 
-        RV_MakeReplayIdentifier(angle_type, zone_id, rank, info, sizeof(info));
-
-        AddMenuItem(new_menu, info, display);
+        AddMenuItem(menu, replay_id, full_row_display);
     }
 
-    rv_zone_menus[zone_id] = new_menu;
+    rv_zone_menus[zone_id] = menu;
 
-    // Stop the waiting menu and open the expected menu.
-    DisplayMenu(new_menu, user_id, MENU_TIME_FOREVER);
+    DisplayMenu(menu, user_id, MENU_TIME_FOREVER);
 }

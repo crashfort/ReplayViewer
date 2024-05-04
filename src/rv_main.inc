@@ -31,8 +31,6 @@ public void RV_MapStart()
 {
     GetCurrentMap(rv_cur_map, sizeof(rv_cur_map));
 
-    rv_sys_state = RV_SYS_IDLE;
-
     RV_StartMapCmds();
     RV_StartMapBots();
     RV_StartMenus();
@@ -65,18 +63,15 @@ public Action RV_RunPlayerCmd(int client, int& buttons, float wishvel[3], float 
 
 public void RV_StartPlayback()
 {
-    rv_sys_state = RV_SYS_PLAYING;
     RV_StartPlaybackBots();
 }
 
 public void RV_StopPlayback()
 {
-    rv_sys_state = RV_SYS_IDLE;
     RV_StopPlaybackBots();
 }
 
 public void RV_ResetPlayback()
 {
-    rv_sys_state = RV_SYS_PAUSED;
     RV_ResetPlaybackBots();
 }

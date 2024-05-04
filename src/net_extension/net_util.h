@@ -18,3 +18,14 @@ inline bool Net_IdxInRange(int32_t idx, int32_t size)
 {
     return idx >= 0 && idx < size;
 }
+
+struct NetJsonFindPair
+{
+    const char* name;
+    json_value_s** val;
+};
+
+json_value_s* Net_FindJsonValueInObject(json_object_s* obj, const char* name);
+size_t Net_FindJsonValuesInObject(json_object_s* obj, NetJsonFindPair* find, size_t num);
+const char* Net_GetJsonString(json_value_s* val);
+bool Net_GetJsonBool(json_value_s* val);

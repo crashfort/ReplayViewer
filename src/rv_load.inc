@@ -152,8 +152,6 @@ public void RV_AddAllFileReplaysForMap()
         PrintToChatAll("No replays available for %s", rv_cur_map);
         return;
     }
-
-    rv_sys_state = RV_SYS_REPLAYS_LOADED;
 }
 
 public void RV_FreeStream(RVStream stream)
@@ -181,16 +179,12 @@ public void RV_DupeStream(RVStream source, RVStream dest)
 // Called on map start.
 public void RV_StartLoad()
 {
-    char stupid[RV_REPLAY_ID_SIZE];
-
-    rv_replay_listing_ids = CreateArray(sizeof(stupid));
-    rv_replay_listings = CreateArray(sizeof(RVReplayListing));
+    rv_replay_listings = CreateTrie();
 }
 
 // Called on map end.
 public void RV_StopLoad()
 {
-    delete rv_replay_listing_ids;
     delete rv_replay_listings;
 }
 
@@ -205,25 +199,24 @@ public void RV_ProcessDownloadedListing(int response_handle)
 
     for (int i = 0; i < num_replays; i++)
     {
+        Net_ReplayListGetId(response_handle, i, listing_id, sizeof(listing_id));
+
         RVReplayListing listing;
-        listing.time = Net_ReplayListGetTime(response_handle, i);
+        strcopy(listing.id, sizeof(listing.id), listing_id);
+        Net_ReplayListGetName(response_handle, i, listing.name, sizeof(listing.name));
+        Net_ReplayListGetTime(response_handle, i, listing.time, sizeof(listing.time));
+        Net_ReplayListGetDate(response_handle, i, listing.date, sizeof(listing.date));
         listing.angle_type = angle_type;
         listing.zone_id = zone_id;
-        listing.idx = i;
 
-        Net_ReplayListGetPlayerName(response_handle, i, listing.name, sizeof(listing.name));
-
-        RV_MakeReplayIdentifier(angle_type, zone_id, i, listing_id, sizeof(listing_id));
-
-        PushArrayString(rv_replay_listing_ids, listing_id);
-        PushArrayArray(rv_replay_listings, listing);
+        SetTrieArray(rv_replay_listings, listing_id, listing, sizeof(listing));
     }
 }
 
+// Get full path to a replay file in the current map.
 public void RV_GetReplayFilePath(char[] stream_id, char[] dest, int dest_size)
 {
-    BuildPath(Path_SM, dest, dest_size, "%s/replays/%s/%s.rec", RV_ROOT_PATH, rv_cur_map, stream_id);
-    ReplaceString(dest, dest_size, ";", "_", true);
+    BuildPath(Path_SM, dest, dest_size, "%s/replays/%s/%s", RV_ROOT_PATH, rv_cur_map, stream_id);
 }
 
 // Load a downloaded replay and spawn a bot with that stream.
@@ -244,19 +237,20 @@ public bool RV_LoadStreamSpawnBot(char[] stream_id)
         return false;
     }
 
-    int listing_idx = FindStringInArray(rv_replay_listing_ids, stream_id);
+    // This function is only to be used when downloading replays, in which case the listings must exist.
+    // The offline file loadings above do not care about the listings.
 
-    if (listing_idx != -1)
+    RVReplayListing listing;
+
+    if (!GetTrieArray(rv_replay_listings, stream_id, listing, sizeof(listing)))
     {
-        // This function is only to be used when downloading replays, in which case the listings must exist.
-        // The offline file loadings above do not care about the listings.
         return false;
     }
 
-    RVReplayListing listing;
-    GetArrayArray(rv_replay_listings, listing_idx, listing);
+    char name[256];
+    Format(name, sizeof(name), "%s (%s)", listing.name, listing.date);
 
-    bool res = RV_SpawnBotWithStream(stream, listing.name);
+    bool res = RV_SpawnBotWithStream(stream, name);
     return res;
 }
 
@@ -264,12 +258,10 @@ public bool RV_LoadStreamSpawnBot(char[] stream_id)
 // This saves the replay to file for future cache, and then loads that file and spawns a bot with that stream.
 public void RV_ProcessDownloadedReplay(int response_handle)
 {
-    int zone_id = Net_ReplayDownloadGetZoneId(response_handle);
-    int angle_type = Net_ReplayDownloadGetAngleType(response_handle);
-    int replay_rank = Net_ReplayDownloadGetRank(response_handle);
-
     char stream_id[RV_REPLAY_ID_SIZE];
-    RV_MakeReplayIdentifier(angle_type, zone_id, replay_rank, stream_id, sizeof(stream_id));
+    Net_ReplayDownloadGetId(response_handle, stream_id, sizeof(stream_id));
+
+    PrintToServer("Downloaded %s", stream_id);
 
     // Save the stream to file and then load that.
     // This makes it a lot easier because the code for loading a file already exists.
@@ -287,15 +279,5 @@ public void RV_ProcessDownloadedReplay(int response_handle)
 
     Net_ReplayDownloadWriteToFile(response_handle, save_path);
 
-    PrintToServer("Downloaded %s", save_path);
-
-    // TODO Enable when server have the needed routes.
-    // RV_LoadStreamSpawnBot(stream_id);
-}
-
-// Use this to create a replay identifier.
-// The replay identifier should be treated as opaque, and not be read or written manually.
-public void RV_MakeReplayIdentifier(int angle_type, int zone_id, int replay_rank, char[] dest, int dest_size)
-{
-    Format(dest, dest_size, "%d;%d;%d", angle_type, zone_id, replay_rank);
+    RV_LoadStreamSpawnBot(stream_id);
 }

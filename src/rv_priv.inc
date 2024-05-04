@@ -8,15 +8,7 @@
 #define RV_ROOT_PATH "data/replay_viewer"
 
 // Size of the key used to identify a replay, in chars.
-#define RV_REPLAY_ID_SIZE 32
-
-enum RVSystemState
-{
-    RV_SYS_IDLE,
-    RV_SYS_REPLAYS_LOADED,
-    RV_SYS_PLAYING,
-    RV_SYS_PAUSED,
-}
+#define RV_REPLAY_ID_SIZE 64
 
 // Data that we read from the file.
 enum struct RVHeader
@@ -89,23 +81,21 @@ enum struct RVBot
 enum RVMenuId
 {
     RV_MENU_TOGGLE_PLAY,
-    RV_MENU_ADD_REPLAYS,
-    RV_MENU_ADD_ALL_REPLAYS_FOR_MAP,
     RV_MENU_START_PLAYBACK,
     RV_MENU_STOP_PLAYBACK,
     RV_MENU_RESET_PLAYBACK,
-    RV_MENU_SHOW_REPLAY_TIMES,
     RV_MENU_LIST_ZONES,
 }
 
 // Information about a replay.
 enum struct RVReplayListing
 {
+    char id[RV_REPLAY_ID_SIZE]; // Unique replay identifier.
     char name[MAX_NAME_LENGTH]; // Player name.
-    int time; // In frames. Use RV_FramesToTime to get milliseconds.
+    char time[64]; // Finishing time. Already formatted.
+    char date[64]; // Record date. Already formatted.
     int angle_type; // Forwards or sideways etc, see NET_ANGLE_TYPE constants.
     int zone_id; // Zone identifier, see NET_ZONE constants.
-    int idx; // Replay index in zone listing.
 }
 
 // -----------------------------------
@@ -118,19 +108,17 @@ int rv_bot_maps[MAXPLAYERS + 1]; // Remaps from client ids to bot indexes.
 
 char rv_cur_map[128];
 
-RVSystemState rv_sys_state;
-
 // Downloaded replay listings for a zone.
 // These are created on demand and reused, meaning that new requests are not made for existing ones.
-ArrayList rv_replay_listing_ids; // Array of strings of unique identifiers for a particular replay in a zone.
-ArrayList rv_replay_listings; // Array of RVReplayListing.
+StringMap rv_replay_listings; // Array of RVReplayListing.
+
+// Main menu.
+// This is created once after map start.
+Menu rv_main_menu;
 
 // Menu for showing what zones exist in the map.
-// This is created once after map start.
+// This is created once after map start, when the map info is received.
 Menu rv_zone_list_menu;
-
-// Menu for showing wait during async operation.
-Menu rv_wait_menu;
 
 // Menus for replay selection in a zone.
 // These are created on demand and reused, meaning that new requests are not made for existing ones.

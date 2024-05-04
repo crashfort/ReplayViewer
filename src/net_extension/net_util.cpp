@@ -56,3 +56,57 @@ void Net_Free(void* addr)
 {
     free(addr);
 }
+
+json_value_s* Net_FindJsonValueInObject(json_object_s* obj, const char* name)
+{
+    for (json_object_element_s* obj_elm = obj->start; obj_elm; obj_elm = obj_elm->next)
+    {
+        if (!strcmp(obj_elm->name->string, name))
+        {
+            return obj_elm->value;
+        }
+    }
+
+    return NULL;
+}
+
+size_t Net_FindJsonValuesInObject(json_object_s* obj, NetJsonFindPair* find, size_t num)
+{
+    size_t found = 0;
+
+    for (size_t i = 0; i < num; i++)
+    {
+        NetJsonFindPair* f = &find[i];
+
+        *f->val = Net_FindJsonValueInObject(obj, f->name);
+
+        if (*f->val)
+        {
+            found++;
+        }
+    }
+
+    return found;
+}
+
+const char* Net_GetJsonString(json_value_s* val)
+{
+    assert(val->type == json_type_string);
+    json_string_s* casted = json_value_as_string(val);
+    return casted->string;
+}
+
+bool Net_GetJsonBool(json_value_s* val)
+{
+    if (val->type == json_type_true)
+    {
+        return true;
+    }
+
+    if (val->type == json_type_false)
+    {
+        return false;
+    }
+
+    assert(false);
+}

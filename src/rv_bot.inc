@@ -334,7 +334,10 @@ public void RV_StopPlaybackBots()
 {
     for (int i = 0; i < rv_num_bots; i++)
     {
-        RV_StopBot(rv_bots[i]);
+        if (RV_IsBotPlaying(rv_bots[i]))
+        {
+            RV_StopBot(rv_bots[i]);
+        }
     }
 }
 

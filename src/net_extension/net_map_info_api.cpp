@@ -8,6 +8,7 @@ struct NetMapInfoAPIResponse
 {
     int32_t num_stages;
     int32_t num_bonuses;
+    int32_t linear;
 };
 
 // Thse are used to give data back to the script.
@@ -40,9 +41,11 @@ cell_t Net_DownloadMapInfo(IPluginContext* context, const cell_t* params)
 
     const char* map = gamehelpers->GetCurrentMap();
 
-    // TODO Don't know the input path.
+    wchar_t stupid_map[128];
+    NET_TO_UTF16(map, stupid_map);
+
     wchar_t req_string[128];
-    NET_SNPRINTFW(req_string, L"");
+    NET_SNPRINTFW(req_string, L"/map/%s/info", stupid_map);
 
     Net_MakeHttpRequest(&NET_MAP_INFO_API_DESC, req_string, NULL);
 
@@ -52,10 +55,51 @@ cell_t Net_DownloadMapInfo(IPluginContext* context, const cell_t* params)
 // Called in the net thread to format the input bytes into a response structure.
 void* Net_FormatMapInfoResponse(void* input, int32_t input_size, NetAPIRequest* request)
 {
-    NetMapInfoAPIResponse* response_state = NET_ZALLOC(NetMapInfoAPIResponse);
+    // We get a JSON response.
 
-    // TODO Don't know the response format.
+    NetMapInfoAPIResponse* response_state = NULL;
 
+    json_value_s* root = json_parse((const char*)input, sizeof(char) * input_size);
+
+    if (root == NULL)
+    {
+        goto rfail; // TODO Need to log the error but we cannot use the SM logs because we are not in the main thread here.
+    }
+
+    json_object_s* root_val = json_value_as_object(root);
+
+    json_value_s* linear_val = NULL;
+    json_value_s* num_stages_val = NULL;
+    json_value_s* num_bonuses_val = NULL;
+
+    NetJsonFindPair needed_values[] = {
+        NetJsonFindPair { "isLinear", &linear_val },
+        NetJsonFindPair { "cpCount", &num_stages_val },
+        NetJsonFindPair { "bCount", &num_bonuses_val },
+    };
+
+    size_t num_found = Net_FindJsonValuesInObject(root_val, needed_values, NET_ARRAY_SIZE(needed_values));
+
+    if (num_found < NET_ARRAY_SIZE(needed_values))
+    {
+        goto rfail;
+    }
+
+    response_state = NET_ZALLOC(NetMapInfoAPIResponse);
+    response_state->num_stages = atoi(Net_GetJsonString(num_stages_val));
+    response_state->num_bonuses = atoi(Net_GetJsonString(num_bonuses_val));
+    response_state->linear = Net_GetJsonBool(linear_val);
+
+    goto rexit;
+
+rfail:
+    if (root)
+    {
+        free(root);
+        root = NULL;
+    }
+
+rexit:
     return response_state;
 }
 
@@ -76,7 +120,6 @@ void Net_HandleMapInfoResponse(NetAPIResponse* response)
     }
 }
 
-// Called when the script calls Net_CloseHandle on the handle from Net_MakeResponseHandle or automatically by the net state when the response fails.
 void Net_FreeMapInfoResponse(NetAPIResponse* response)
 {
     NetMapInfoAPIResponse* response_state = (NetMapInfoAPIResponse*)response->response_state;
@@ -87,7 +130,6 @@ void Net_FreeMapInfoResponse(NetAPIResponse* response)
     }
 }
 
-// Called by the script to read the response data.
 cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
@@ -102,7 +144,6 @@ cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
     return response_state->num_stages;
 }
 
-// Called by the script to read the response data.
 cell_t Net_MapInfoGetNumBonuses(IPluginContext* context, const cell_t* params)
 {
     NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
@@ -117,10 +158,25 @@ cell_t Net_MapInfoGetNumBonuses(IPluginContext* context, const cell_t* params)
     return response_state->num_bonuses;
 }
 
+cell_t Net_MapInfoGetLinear(IPluginContext* context, const cell_t* params)
+{
+    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
+
+    if (response == NULL)
+    {
+        context->ReportError("Invalid handle");
+        return 0;
+    }
+
+    NetMapInfoAPIResponse* response_state = (NetMapInfoAPIResponse*)response->response_state;
+    return response_state->linear;
+}
+
 sp_nativeinfo_t NET_MAP_INFO_API_NATIVES[] = {
     sp_nativeinfo_t { "Net_DownloadMapInfo", Net_DownloadMapInfo },
     sp_nativeinfo_t { "Net_MapInfoGetNumStages", Net_MapInfoGetNumStages },
     sp_nativeinfo_t { "Net_MapInfoGetNumBonuses", Net_MapInfoGetNumBonuses },
+    sp_nativeinfo_t { "Net_MapInfoGetLinear", Net_MapInfoGetLinear },
     sp_nativeinfo_t { NULL, NULL },
 };
 
