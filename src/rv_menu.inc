@@ -43,18 +43,21 @@ public int RV_HandlePlaybackMenu(Menu menu, MenuAction action, int param1, int p
             {
                 RV_StartPlayback();
                 DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
+                PrintToChatAll("Start playback");
             }
 
             case RV_MENU_STOP_PLAYBACK:
             {
                 RV_StopPlayback();
                 DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
+                PrintToChatAll("Stop playback");
             }
 
             case RV_MENU_RESET_PLAYBACK:
             {
                 RV_ResetPlayback();
                 DisplayMenu(rv_main_menu, param1, MENU_TIME_FOREVER);
+                PrintToChatAll("Reset playback");
             }
 
             case RV_MENU_LIST_ZONES:
@@ -124,6 +127,7 @@ public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int
         if (rv_zone_menus[zone_id] == null)
         {
             Net_DownloadReplayList(param1, zone_id, angle_type);
+            PrintToChatAll("Downloading replay list, please wait");
         }
 
         else
@@ -206,6 +210,7 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
         if (!FileExists(load_path))
         {
             Net_DownloadReplay(param1, replay_id);
+            PrintToChatAll("Downloading replay");
         }
 
         else
