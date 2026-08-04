@@ -6,9 +6,10 @@
 // SVR functions.
 
 #define REC_STATE_IDLE 0
-#define REC_STATE_LOADED 1
-#define REC_STATE_PLAYING 2
-#define REC_STATE_FINISHED 3
+#define REC_STATE_READY 1
+#define REC_STATE_LOADED 2
+#define REC_STATE_PLAYING 3
+#define REC_STATE_FINISHED 4
 #define REC_STATE_ERROR 999
 
 // Mark a state in the replay process to notify SVR.

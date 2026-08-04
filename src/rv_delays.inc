@@ -72,7 +72,7 @@ public Action RV_SetupBots(Handle timer)
 
 public Action RV_NotifySyncTask(Handle timer)
 {
-    Rec_MarkState(REC_STATE_LOADED);
+    Rec_MarkState(REC_STATE_READY);
     return Plugin_Stop;
 }
 
