@@ -35,13 +35,11 @@ public void RV_MapStart()
     RV_StartDelays();
     RV_StartMapCmds();
     RV_StartMapBots();
-    RV_StartMenus();
     RV_StartLoad();
 }
 
 public void RV_MapEnd()
 {
-    RV_StopMenus();
     RV_StopLoad();
 }
 
@@ -66,7 +64,6 @@ public void RV_StartPlayback()
 public void RV_StopPlayback()
 {
     RV_StopPlaybackBots();
-    RV_StopMenuLoadRestriction();
 }
 
 public void RV_ResetPlayback()

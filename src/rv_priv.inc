@@ -105,24 +105,4 @@ RVBot rv_playback_bot;
 
 char rv_cur_map[128];
 
-// Downloaded replay listings for a zone.
-// These are created on demand and reused, meaning that new requests are not made for existing ones.
-StringMap rv_replay_listings; // Value is RVReplayListing.
-
-// Main menu.
-// This is created once after map start.
-Menu rv_main_menu;
-
-// Menu for showing what zones exist in the map.
-// This is created once after map start, when the map info is received.
-Menu rv_zone_list_menu;
-
-// Menus for replay selection in a zone.
-// These are created on demand and reused, meaning that new requests are not made for existing ones.
-Menu rv_zone_menus[NET_ZONES_MAX];
-
-// Currently playing streams.
-// Used to guard against duplication during playback in the replay selection menu.
-StringMap rv_loaded_streams; // Value is int.
-
 char rv_pending_replay[256];
