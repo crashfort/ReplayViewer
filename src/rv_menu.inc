@@ -96,7 +96,7 @@ public void RV_StartMenus()
 
     // Download map info immediately.
     // This will call into Net_MapInfoDownloadReceived or Net_MapInfoDownloadFailed in rv_net_callbacks.inc.
-    Net_DownloadMapInfo();
+    // Net_DownloadMapInfo();
 
     rv_loaded_streams = CreateTrie();
 }
@@ -116,6 +116,7 @@ public void RV_StopMenus()
 
 public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int param2)
 {
+#if 0
     // User has selected a zone to view the replays for, such as stage 6.
     if (action == MenuAction_Select)
     {
@@ -129,7 +130,7 @@ public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int
         // This will call into Net_ReplayListDownloadReceived or Net_ReplayListDownloadFailed in rv_net_callbacks.inc.
         if (rv_zone_menus[zone_id] == null)
         {
-            Net_DownloadReplayList(param1, zone_id, angle_type);
+            // Net_DownloadReplayList(param1, zone_id, angle_type);
             PrintToChatAll("Downloading replay list, please wait");
         }
 
@@ -151,15 +152,17 @@ public int RV_HandleSelectZoneMenu(Menu menu, MenuAction action, int param1, int
     {
     }
 
+#endif
     return 0;
 }
 
 // Build the zone list menu now when we have the number of stages and bonuses.
-public void RV_CreateZoneListMenu(int response_handle)
+public void RV_CreateZoneListMenu()
 {
-    int num_stages = Net_MapInfoGetNumStages(response_handle);
-    int num_bonuses = Net_MapInfoGetNumBonuses(response_handle);
-    bool linear = Net_MapInfoGetLinear(response_handle);
+#if 0
+    int num_stages = Net_MapInfoGetNumStages();
+    int num_bonuses = Net_MapInfoGetNumBonuses();
+    bool linear = Net_MapInfoGetLinear();
 
     rv_zone_list_menu = CreateMenu(RV_HandleSelectZoneMenu);
     SetMenuTitle(rv_zone_list_menu, "Select zone");
@@ -195,10 +198,12 @@ public void RV_CreateZoneListMenu(int response_handle)
 
         AddMenuItem(rv_zone_list_menu, info, display);
     }
+#endif
 }
 
 public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, int param2)
 {
+#if 0
     // User has selected a replay within a zone.
     if (action == MenuAction_Select)
     {
@@ -255,16 +260,18 @@ public int RV_HandleSelectReplayMenu(Menu menu, MenuAction action, int param1, i
         return ITEMDRAW_DEFAULT;
     }
 
+#endif
     return 0;
 }
 
 // Build the replay selection menu for a given zone.
-public void RV_CreateNewReplayListMenu(int response_handle)
+public void RV_CreateNewReplayListMenu()
 {
-    int user_id = Net_ReplayListGetUserId(response_handle);
-    // int angle_type = Net_ReplayListGetAngleType(response_handle);
-    int zone_id = Net_ReplayListGetZoneId(response_handle);
-    int num_replays = Net_ReplayListGetNum(response_handle);
+#if 0
+    int user_id = Net_ReplayListGetUserId();
+    // int angle_type = Net_ReplayListGetAngleType();
+    int zone_id = Net_ReplayListGetZoneId();
+    int num_replays = Net_ReplayListGetNum();
 
     char zone_title[32];
     Net_CategorizeZoneId(zone_id, zone_title, sizeof(zone_title));
@@ -284,10 +291,10 @@ public void RV_CreateNewReplayListMenu(int response_handle)
 
     for (int i = 0; i < num_replays; i++)
     {
-        Net_ReplayListGetName(response_handle, i, name_display, sizeof(name_display));
-        Net_ReplayListGetTime(response_handle, i, time_display, sizeof(time_display));
-        Net_ReplayListGetDate(response_handle, i, date_display, sizeof(date_display));
-        Net_ReplayListGetId(response_handle, i, replay_id, sizeof(replay_id));
+        Net_ReplayListGetName(, i, name_display, sizeof(name_display));
+        Net_ReplayListGetTime(, i, time_display, sizeof(time_display));
+        Net_ReplayListGetDate(, i, date_display, sizeof(date_display));
+        Net_ReplayListGetId(, i, replay_id, sizeof(replay_id));
 
         Format(full_row_display, sizeof(full_row_display), "[%s] %s (%s)", time_display, name_display, date_display);
 
@@ -297,6 +304,7 @@ public void RV_CreateNewReplayListMenu(int response_handle)
     rv_zone_menus[zone_id] = menu;
 
     DisplayMenu(menu, user_id, MENU_TIME_FOREVER);
+#endif
 }
 
 public void RV_StopMenuLoadRestriction()

@@ -5,44 +5,38 @@
 
 // Console commands.
 
-public Action RV_MainMenuCmd(int client, int args)
+// Just used to set which file to load.
+public Action RV_LoadReplayCmd(int client, int args)
 {
-    DisplayMenu(rv_main_menu, client, MENU_TIME_FOREVER);
+    GetCmdArg(1, rv_pending_replay, sizeof(rv_pending_replay));
+
+    if (strlen(rv_pending_replay) > 0)
+    {
+        if (RV_LoadLocalFile(rv_pending_replay))
+        {
+            Rec_MarkState(REC_STATE_LOADED);
+        }
+
+        else
+        {
+            Rec_MarkState(REC_STATE_ERROR);
+        }
+    }
+
+    return Plugin_Handled;
+}
+
+public Action RV_StartReplayCmd(int client, int args)
+{
+    RV_StartPlayback();
+    Rec_MarkState(REC_STATE_PLAYING);
     return Plugin_Handled;
 }
 
 public void RV_RegisterCmds()
 {
-    RegConsoleCmd("sm_replay_viewer", RV_MainMenuCmd);
-}
-
-public Action RV_SpawnBots(Handle timer)
-{
-    ServerCommand("nav_load"); // Use the dummy file we created in RV_StartNav.
-    ServerExecute();
-
-    ServerCommand("bot_chatter off");
-    ServerCommand("bot_stop 1");
-
-    ServerCommand("bot_quota %d", MAXPLAYERS - 1);
-    ServerCommand("bot_zombie 1");
-    ServerCommand("bot_stop 1");
-    ServerCommand("mp_autoteambalance 0");
-    ServerCommand("bot_join_after_player 0");
-    ServerCommand("mp_limitteams 0");
-
-    // Don't let the bot commands be overwritten.
-    ServerExecute();
-
-    return Plugin_Stop;
-}
-
-// Remove entities that teleport everyone to the jail after a timeout.
-public Action RV_RemoveJails(Handle timer)
-{
-    ServerCommand("ent_remove_all logic_timer");
-    ServerExecute();
-    return Plugin_Stop;
+    RegConsoleCmd("sm_load_replay", RV_LoadReplayCmd);
+    RegConsoleCmd("sm_start_replay", RV_StartReplayCmd);
 }
 
 // Set some prerequisites that we want.

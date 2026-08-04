@@ -90,72 +90,24 @@ bool RV_LoadFileStream(char[] path, RVStream stream)
     return true;
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!
-// Code unused for now, offline playback would need more menu work to work good.
-// !!!!!!!!!!!!!!!!!!!!!!!!!
-
-// Instead of managing a huge list with many pages of hard to read names,
-// let the file management be done in the file explorer and just add everything in there.
-public void RV_AddAllFileReplaysForMap()
+public bool RV_LoadLocalFile(char[] file_name)
 {
-    char dir_path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, dir_path, sizeof(dir_path), "%s/replays/%s", RV_ROOT_PATH, rv_cur_map);
-
-    if (!DirExists(dir_path))
-    {
-        PrintToChatAll("No replays exist for map %s", rv_cur_map);
-        return;
-    }
-
-    DirectoryListing dir_lister = OpenDirectory(dir_path);
-
-    if (dir_lister == null)
-    {
-        PrintToChatAll("Could not open directory for map %s", rv_cur_map);
-        return;
-    }
-
-    FileType file_type;
-    char file_name[PLATFORM_MAX_PATH];
-    int index = 0;
-
     char full_path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, full_path, sizeof(full_path), "%s/replays/%s/%s", RV_ROOT_PATH, rv_cur_map, file_name);
 
-    while (ReadDirEntry(dir_lister, file_name, sizeof(file_name), file_type))
+    RVStream stream;
+
+    if (!RV_LoadFileStream(full_path, stream))
     {
-        if (file_type != FileType_File)
-        {
-            continue;
-        }
-
-        if (!RV_CanSpawnMoreBots())
-        {
-            break; // We are full.
-        }
-
-        FormatEx(full_path, sizeof(full_path), "%s/%s", dir_path, file_name);
-
-        RVStream stream;
-
-        if (!RV_LoadFileStream(full_path, stream))
-        {
-            continue;
-        }
-
-        // For files, we do not have any way to get the player name.
-        // Use the file name and let the user make good names.
-        RV_SpawnBotWithStream(stream, file_name);
-
-        index++;
+        return false;
     }
 
-    delete dir_lister;
-
-    if (index == 0)
+    if (!RV_SpawnBotWithStream(stream, "crashfort/ReplayViewer"))
     {
-        PrintToChatAll("No replays available for %s", rv_cur_map);
-        return;
+        return false;
     }
+
+    return true;
 }
 
 public void RV_FreeStream(RVStream stream)
@@ -193,28 +145,30 @@ public void RV_StopLoad()
 }
 
 // Store data from the replay listing.
-public void RV_ProcessDownloadedListing(int response_handle)
+public void RV_ProcessDownloadedListing()
 {
-    int angle_type = Net_ReplayListGetAngleType(response_handle);
-    int zone_id = Net_ReplayListGetZoneId(response_handle);
-    int num_replays = Net_ReplayListGetNum(response_handle);
+#if 0
+    int angle_type = Net_ReplayListGetAngleType();
+    int zone_id = Net_ReplayListGetZoneId();
+    int num_replays = Net_ReplayListGetNum();
 
     char listing_id[RV_REPLAY_ID_SIZE];
 
     for (int i = 0; i < num_replays; i++)
     {
-        Net_ReplayListGetId(response_handle, i, listing_id, sizeof(listing_id));
+        Net_ReplayListGetId(i, listing_id, sizeof(listing_id));
 
         RVReplayListing listing;
         strcopy(listing.id, sizeof(listing.id), listing_id);
-        Net_ReplayListGetName(response_handle, i, listing.name, sizeof(listing.name));
-        Net_ReplayListGetTime(response_handle, i, listing.time, sizeof(listing.time));
-        Net_ReplayListGetDate(response_handle, i, listing.date, sizeof(listing.date));
+        Net_ReplayListGetName(i, listing.name, sizeof(listing.name));
+        Net_ReplayListGetTime(i, listing.time, sizeof(listing.time));
+        Net_ReplayListGetDate(i, listing.date, sizeof(listing.date));
         listing.angle_type = angle_type;
         listing.zone_id = zone_id;
 
         SetTrieArray(rv_replay_listings, listing_id, listing, sizeof(listing));
     }
+#endif
 }
 
 // Get full path to a replay file in the current map.
@@ -260,10 +214,11 @@ public bool RV_LoadStreamSpawnBot(char[] stream_id)
 
 // A replay selected in the zone menu has been downloaded.
 // This saves the replay to file for future cache, and then loads that file and spawns a bot with that stream.
-public void RV_ProcessDownloadedReplay(int response_handle)
+public void RV_ProcessDownloadedReplay()
 {
+#if 0
     char stream_id[RV_REPLAY_ID_SIZE];
-    Net_ReplayDownloadGetId(response_handle, stream_id, sizeof(stream_id));
+    Net_ReplayDownloadGetId(stream_id, sizeof(stream_id));
 
     PrintToServer("Downloaded %s", stream_id);
 
@@ -281,7 +236,8 @@ public void RV_ProcessDownloadedReplay(int response_handle)
     char save_path[PLATFORM_MAX_PATH];
     RV_GetReplayFilePath(stream_id, save_path, sizeof(save_path));
 
-    Net_ReplayDownloadWriteToFile(response_handle, save_path);
+    Net_ReplayDownloadWriteToFile(save_path);
 
     RV_LoadStreamSpawnBot(stream_id);
+#endif
 }

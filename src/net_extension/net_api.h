@@ -16,9 +16,9 @@ struct NetAPIDesc
     // Called in the net thread.
     void*(*format_response_func)(void* input, int32_t input_size, NetAPIRequest* request);
 
-    // Process the response, such as calling a script forward.
-    // If the response worked, you can create a response handle through Net_MakeResponseHandle and pass that to the script.
-    // You must not call Net_MakeResponseHandle or pass anything about the response to the script if the response failed.
+    // Process the response in the main thread, such as calling a script forward.
+    // If the response worked, a response handle is created automatically for this call which you can read through Net_GetResponseHandle.
+    // You must not pass anything about the response to the script if the response failed.
     void(*handle_response_func)(NetAPIResponse* response);
 
     // Free anything previously allocated during the request and response.
@@ -54,5 +54,4 @@ void Net_AddHeader(const wchar_t* format, ...);
 void Net_TerminateHeader();
 bool Net_ReadHeader(const wchar_t* header, wchar_t* dest, int32_t dest_size);
 
-NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle, NetAPIDesc* type_check);
-int32_t Net_MakeResponseHandle(NetAPIResponse* response);
+NetAPIResponse* Net_GetResponseHandle(NetAPIDesc* type_check);

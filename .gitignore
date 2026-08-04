@@ -10,3 +10,5 @@
 *.lib
 *.exp
 *.vcxproj.user
+dist
+deps/bzip2/bzip2/x64

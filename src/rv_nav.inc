@@ -11,5 +11,5 @@ public void RV_StartNav()
     BuildPath(Path_SM, dummy_nav_path, sizeof(dummy_nav_path), "%s/dummy.nav", RV_ROOT_PATH);
 
     // Create a dummy navigation file so it doesn't take ages to load new maps.
-    Net_CreateDummyNavForMap(dummy_nav_path);
+    Rec_CreateDummyNavForMap(dummy_nav_path);
 }

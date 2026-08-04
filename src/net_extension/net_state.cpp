@@ -52,6 +52,11 @@ std::vector<NetAPIResponse> net_local_responses;
 // Only used by the net thread.
 HINTERNET net_cur_response;
 
+// This is the response that the script received in a callback.
+// It is only available for a short period of time when the script callback is called.
+// Only used in the main thread.
+NetAPIResponse* net_cur_api_response;
+
 // Entrypoint for API calls.
 // Call on the main thread to give a new http request to the net thread.
 void Net_MakeHttpRequest(NetAPIDesc* desc, const wchar_t* request_string, void* request_state)
@@ -299,28 +304,20 @@ bool Net_ReadHeader(const wchar_t* header, wchar_t* dest, int32_t dest_size)
     return Net_QueryHttpHeader(net_cur_response, header, dest, dest_size);
 }
 
-NetAPIResponse* Net_GetResponseFromHandle(int32_t response_handle, NetAPIDesc* type_check)
+NetAPIResponse* Net_GetResponseHandle(NetAPIDesc* type_check)
 {
-    NetAPIResponse* response = (NetAPIResponse*)response_handle;
-
-    if (response)
+    if (net_cur_api_response)
     {
         if (type_check)
         {
-            if (response->desc != type_check)
+            if (net_cur_api_response->desc != type_check)
             {
                 return NULL;
             }
         }
     }
 
-    return response;
-}
-
-int32_t Net_MakeResponseHandle(NetAPIResponse* response)
-{
-    assert(response->status); // Must only be called on a valid response.
-    return (int32_t)response;
+    return net_cur_api_response;
 }
 
 bool Net_InitAuth()
@@ -381,12 +378,14 @@ void Net_ReadThreadResponses()
 
     for (size_t i = 0; i < net_local_responses.size(); i++)
     {
-        NetAPIResponse* response = &net_local_responses[i];
+        net_cur_api_response = &net_local_responses[i];
 
         // Still call even if the response failed, in order to call script functions.
-        response->desc->handle_response_func(response);
-        response->desc->free_response_func(response); // Not needed any more.
+        net_cur_api_response->desc->handle_response_func(net_cur_api_response);
+        net_cur_api_response->desc->free_response_func(net_cur_api_response); // Not needed any more.
     }
+
+    net_cur_api_response = NULL;
 
     net_local_responses.clear();
 }
@@ -417,27 +416,6 @@ bool Net_ConnectedToInet()
 cell_t Net_ConnectedToInet(IPluginContext* context, const cell_t* params)
 {
     return Net_ConnectedToInet();
-}
-
-cell_t Net_CreateDummyNavForMap(IPluginContext* context, const cell_t* params)
-{
-    const char* map = gamehelpers->GetCurrentMap();
-
-    char* source_ptr;
-    context->LocalToString(params[1], &source_ptr);
-
-    char source_path_buf[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, source_path_buf, NET_ARRAY_SIZE(source_path_buf), source_ptr);
-
-    char dest_ptr[PLATFORM_MAX_PATH];
-    NET_SNPRINTF(dest_ptr, "maps\\%s.nav", map);
-
-    char dest_path_buf[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, dest_path_buf, NET_ARRAY_SIZE(dest_path_buf), dest_ptr);
-
-    CopyFileA(source_path_buf, dest_path_buf, TRUE); // Don't need to overwrite if something exists already.
-
-    return 0;
 }
 
 bool Net_Init()
@@ -519,6 +497,5 @@ void Net_Shutdown()
 
 sp_nativeinfo_t NET_NATIVES[] = {
     sp_nativeinfo_t { "Net_ConnectedToInet", Net_ConnectedToInet },
-    sp_nativeinfo_t { "Net_CreateDummyNavForMap", Net_CreateDummyNavForMap },
     sp_nativeinfo_t { NULL, NULL },
 };

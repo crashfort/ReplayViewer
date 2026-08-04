@@ -101,10 +101,7 @@ enum struct RVReplayListing
 // -----------------------------------
 // System state:
 
-// References to every bot.
-RVBot rv_bots[MAXPLAYERS + 1]; // Using indexes 0 and up.
-int rv_num_bots; // How many bots are actually placed in rv_bots.
-int rv_bot_maps[MAXPLAYERS + 1]; // Remaps from client ids to bot indexes.
+RVBot rv_playback_bot;
 
 char rv_cur_map[128];
 
@@ -127,3 +124,5 @@ Menu rv_zone_menus[NET_ZONES_MAX];
 // Currently playing streams.
 // Used to guard against duplication during playback in the replay selection menu.
 StringMap rv_loaded_streams; // Value is int.
+
+char rv_pending_replay[256];

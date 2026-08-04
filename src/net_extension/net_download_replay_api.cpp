@@ -101,7 +101,6 @@ void Net_HandleReplayDownloadResponse(NetAPIResponse* response)
 
     if (response->status)
     {
-        net_replay_dl_received->PushCell(Net_MakeResponseHandle(response)); // Give handle to script.
         net_replay_dl_received->Execute();
     }
 
@@ -134,7 +133,7 @@ void Net_FreeReplayDownloadResponse(NetAPIResponse* response)
 
 cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_DOWNLOAD_API_DESC);
 
     if (response == NULL)
     {
@@ -148,7 +147,7 @@ cell_t Net_ReplayDownloadGetUserId(IPluginContext* context, const cell_t* params
 
 cell_t Net_ReplayDownloadWriteToFile(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_DOWNLOAD_API_DESC);
 
     if (response == NULL)
     {
@@ -180,7 +179,7 @@ cell_t Net_ReplayDownloadWriteToFile(IPluginContext* context, const cell_t* para
 
 cell_t Net_ReplayDownloadGetId(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_DOWNLOAD_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_DOWNLOAD_API_DESC);
 
     if (response == NULL)
     {

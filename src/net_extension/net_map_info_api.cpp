@@ -110,7 +110,6 @@ void Net_HandleMapInfoResponse(NetAPIResponse* response)
 
     if (response->status)
     {
-        net_map_info_dl_received->PushCell(Net_MakeResponseHandle(response)); // Give handle to script.
         net_map_info_dl_received->Execute();
     }
 
@@ -132,7 +131,7 @@ void Net_FreeMapInfoResponse(NetAPIResponse* response)
 
 cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_MAP_INFO_API_DESC);
 
     if (response == NULL)
     {
@@ -146,7 +145,7 @@ cell_t Net_MapInfoGetNumStages(IPluginContext* context, const cell_t* params)
 
 cell_t Net_MapInfoGetNumBonuses(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_MAP_INFO_API_DESC);
 
     if (response == NULL)
     {
@@ -160,7 +159,7 @@ cell_t Net_MapInfoGetNumBonuses(IPluginContext* context, const cell_t* params)
 
 cell_t Net_MapInfoGetLinear(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_MAP_INFO_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_MAP_INFO_API_DESC);
 
     if (response == NULL)
     {

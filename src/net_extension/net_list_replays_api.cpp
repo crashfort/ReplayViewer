@@ -154,7 +154,6 @@ void Net_HandleReplayListResponse(NetAPIResponse* response)
 
     if (response->status)
     {
-        net_replay_list_dl_received->PushCell(Net_MakeResponseHandle(response)); // Give handle to script.
         net_replay_list_dl_received->Execute();
     }
 
@@ -187,7 +186,7 @@ void Net_FreeReplayListResponse(NetAPIResponse* response)
 
 cell_t Net_ReplayListGetUserId(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -201,7 +200,7 @@ cell_t Net_ReplayListGetUserId(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -215,7 +214,7 @@ cell_t Net_ReplayListGetNum(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetId(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -243,7 +242,7 @@ cell_t Net_ReplayListGetId(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetName(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -271,7 +270,7 @@ cell_t Net_ReplayListGetName(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetTime(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -299,7 +298,7 @@ cell_t Net_ReplayListGetTime(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetDate(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -327,7 +326,7 @@ cell_t Net_ReplayListGetDate(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetZoneId(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
@@ -341,7 +340,7 @@ cell_t Net_ReplayListGetZoneId(IPluginContext* context, const cell_t* params)
 
 cell_t Net_ReplayListGetAngleType(IPluginContext* context, const cell_t* params)
 {
-    NetAPIResponse* response = Net_GetResponseFromHandle(params[1], &NET_REPLAY_LIST_API_DESC);
+    NetAPIResponse* response = Net_GetResponseHandle(&NET_REPLAY_LIST_API_DESC);
 
     if (response == NULL)
     {
