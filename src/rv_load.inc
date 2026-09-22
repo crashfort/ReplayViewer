@@ -3,7 +3,14 @@
 #endif
 #define LOAD_INCLUDED
 
-#define RV_MAGIC 0x02 // Identifier or version.
+// Possible versions.
+#define RV_VERSION_2 2
+#define RV_VERSION_3 3
+
+// Version 3 has a different size RVFrame structure with more data, additionally it has extra block of additional metadata after the header.
+// 10 cells here are referring to the definition we have of RVFrame.
+#define RV_VERSION_2_NUM_FRAME_CELLS 10
+#define RV_MAX_FRAME_CELLS 64
 
 bool RV_LoadFileStream(char[] path, RVStream stream)
 {
@@ -20,11 +27,36 @@ bool RV_LoadFileStream(char[] path, RVStream stream)
     RVHeader header;
     ReadFile(file, header, sizeof(header), 4);
 
-    if (header.magic != RV_MAGIC)
+    if (header.magic != RV_VERSION_2 && header.magic != RV_VERSION_3)
     {
-        PrintToChatAll("Could not load stream \"%s\", wrong version or wrong file type (%d), expected %d", path, header.magic, RV_MAGIC);
+        PrintToChatAll("Could not load stream \"%s\", wrong version or wrong file type (%d)", path, header.magic);
         delete file;
         return false;
+    }
+
+    // In version 3 the size of the RVFrame structure is more dynamic, so read what size the file has.
+    int frame_cells = RV_VERSION_2_NUM_FRAME_CELLS;
+
+    if (header.magic == RV_VERSION_3)
+    {
+        // We always need to read this because it is only a smaller part of this versions frame structure that we actually care about.
+        ReadFileCell(file, frame_cells, 4);
+
+        int ext_cells;
+        ReadFileCell(file, ext_cells, 4);
+
+        if ((frame_cells < RV_VERSION_2_NUM_FRAME_CELLS) || (frame_cells > RV_MAX_FRAME_CELLS))
+        {
+            PrintToChatAll("Could not load stream \"%s\", unsupported frame size (%d cells)", path, frame_cells);
+            delete file;
+            return false;
+        }
+
+        // Ignore extra metadata after the header.
+        if (ext_cells > 0)
+        {
+            FileSeek(file, ext_cells * 4, SEEK_CUR);
+        }
     }
 
     stream.bookmarks = CreateArray(sizeof(RVBookmark));
@@ -41,11 +73,14 @@ bool RV_LoadFileStream(char[] path, RVStream stream)
     stream.frames = CreateArray(sizeof(RVFrame));
     ResizeArray(stream.frames, header.num_frames);
 
+    // Intermediate storage for the whole frame.
+    int frame_scratch[RV_MAX_FRAME_CELLS];
+
     for (int i = 0; i < header.num_frames; i++)
     {
-        RVFrame frame;
-        ReadFile(file, frame, sizeof(frame), 4);
-        SetArrayArray(stream.frames, i, frame);
+        // Read the whole frame as present in the file, and then discard everything larger than the frame size we care about.
+        ReadFile(file, frame_scratch, frame_cells, 4);
+        SetArrayArray(stream.frames, i, frame_scratch, sizeof(RVFrame));
     }
 
     stream.num_frames = header.num_frames;
