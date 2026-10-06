@@ -30,7 +30,7 @@ public Plugin my_info =
     name = "Replay viewer",
     author = "crashfort",
     description = "",
-    version = "1",
+    version = "4",
     url = "https://github.com/crashfort/ReplayViewer"
 };
 
