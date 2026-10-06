@@ -27,6 +27,7 @@ public Action RV_SpawnBots(Handle timer)
     ServerCommand("mp_autoteambalance 0");
     ServerCommand("bot_join_after_player 0");
     ServerCommand("mp_limitteams 0");
+    ServerCommand("mp_freezetime 0");
 
     // Don't let the bot commands be overwritten.
     ServerExecute();
