@@ -110,13 +110,24 @@ public void RV_UpdateBotPlaying(int& buttons, float wish_vel[3], float wish_angl
         float cur_pos[3];
         GetClientAbsOrigin(rv_playback_bot.id, cur_pos);
 
-        float distance = GetVectorDistance(frame.position, cur_pos, true);
+        RVFrame prev_frame;
+        GetArrayArray(rv_playback_bot.stream.frames, read_frame - 1, prev_frame);
+
+        // Expected position from the recorded velocity.
+        float expected_pos[3];
+
+        for (int i = 0; i < 3; i++)
+        {
+            expected_pos[i] = prev_frame.position[i] + (prev_frame.velocity[i] + frame.velocity[i]) * 0.5 * GetTickInterval();
+        }
+
+        float distance = GetVectorDistance(frame.position, expected_pos, true);
 
         // Teleported somewhere else.
-        if (distance > 9216.0)
+        if (distance > 16384.0)
         {
             TeleportEntity(rv_playback_bot.id, frame.position, view_angles, NULL_VECTOR);
-            Rec_ProvideData(RV_ZERO_VECTOR3, frame.buttons);
+            Rec_ProvideData(frame.velocity, frame.buttons);
         }
 
         // Normal processing with just adjusting velocity between the recorded points.
